@@ -1,0 +1,40 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CashMapper">
+	<select id="ucashye" parameterType="Map" resultType="double">
+		select moneys from yun_user where user_id=#{userid}
+	</select>
+	<update id="cashtx" parameterType="Map">
+		update yun_user set moneys=moneys-#{moneys} where user_id=#{userid}
+	</update>
+	<!--提现记录-->
+	<insert id="txrecord" parameterType="Map">
+		insert into yun_pay_treasure_show_records(waterNumber,payTime,moneys,tx_Id,zfbAccount,username)
+		values(#{waterNumber},NOW(),#{moneys},#{userid},#{zfbAccount},#{username})
+	</insert>
+	<!--现金充值记录表-->
+	<insert id="cashczrecord">
+		insert into yun_prepaid_phone_records(user_id,moneys,types,createTime) values(#{userid},#{moneys},#{types},now())
+	</insert>
+	<!--用户添加现金-->
+	<update id="useraddmoneys" parameterType="Map">
+		update  yun_user set moneys=moneys+#{moneys} where user_id=#{userid}
+	</update>
+	<!--现金提现查询-->
+	<select id="cashtxcx" parameterType="Map" resultType="Map">
+		select 
+		waterNumber,
+		payTime,
+		dzTime,
+		moneys,
+		state,
+		username
+		from yun_pay_treasure_show_records where tx_Id=#{userid}
+		order by payTime desc
+	</select>
+	<!--支付宝验证-->
+	<select id="zfpsverify" resultType="int" parameterType="Map">
+		select count(1) from yun_user where  user_id=#{userid}	and payPassword=#{paypassword}
+	</select>
+	
+
+</mapper>

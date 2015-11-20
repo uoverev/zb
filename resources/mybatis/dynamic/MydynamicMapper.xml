@@ -1,0 +1,1028 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MydynamicMapper">
+
+	<select id="task" parameterType="Map" resultType="Map">
+		select 
+		task_id,
+		task_typeId,
+		origin,
+		destination,
+		moneys,
+		cx,
+		contactPhone,
+		theme,
+		content,
+		periodValidity,
+		businessType,
+		taskState,
+		grabSingle,
+		numbers,
+		create_time as create_time,
+		 0 as type
+		from  yun_task
+		where
+			 <if test="task_id!=null and task_id!=''">
+			 		task_id=#{task_id}
+			 </if>
+			order by create_time desc
+	</select>
+	<select id="alldynamic"   parameterType="Map"  resultType="Map">			
+SELECT
+	types,
+	b.zf_content,
+<!-- 	comment_num,
+	transpond_num,
+	isPraise, -->
+	b.task_id,
+	b.typename,
+	b.rank,
+	b.bzfrank,
+	b.dt_id,
+	b.userid,
+	b.bzfuserid,
+	b.content,
+	b.bzfcontent,
+	b.create_time,
+	b.bzfcreatetime,
+	b.numbers,
+	b.user_name,
+	b.bzf_name,
+	b.head_portrait,
+	b.bzfhead_portrait,
+	b.age,
+	b.bzfage,
+	b.sex,
+	b.bzfsex,
+	b.rzState,
+	b.bzfrzstate,
+<!-- 	b.professionState ,
+	b.bzfprofessionState, -->
+	b.moneys,
+	b.origin,
+	b.destination,
+	b.cx
+FROM
+	(
+		SELECT
+0 as  types,
+0 as zf_content, 
+<!-- (select count(c.ithingsId) from yun_LeaveMessage c where c.ithingsId=dt.dt_id and messageType=1) as comment_num,
+ (select count(zf.tid) from yun_dynamic_forward zf where zf.tid=dt.dt_id and dynamic_type=1) as transpond_num ,
+(select count(tid) from yun_some_praise where tid=dt.dt_id and types=1 and user_id=#{userid}) as isPraise, -->
+0 as task_id,
+0 as typename,  
+(select xy.rank from yun_xy xy where dt.user_id=u.user_id and (u.attitude+u.literacy+u.professional+u.punctual)>=xy.lowScore and (u.attitude+u.literacy+u.professional+u.punctual)&lt;xy.highScore) as rank,      
+0 as bzfrank,
+dt.dt_id,		
+dt.user_id as userid,
+0 as bzfuserid,
+dt.content,
+0 as bzfcontent,
+dt.createTime as create_time,
+now() as bzfcreatetime,
+dt.thumbNumbers as numbers,
+u.user_name,   
+0 as bzf_name,   
+u.head_portrait,
+0 as bzfhead_portrait,
+if(u.age is not null,u.age,0) as age,
+0 as bzfage,
+if(u.sex is not null,u.sex,-1) as sex,
+0 as bzfsex,
+u.rzState,     
+0 as bzfrzstate,
+<!-- (select count(user_id) from yun_vocational_skills_certification where user_id=dt.user_id) as professionState,
+0 as bzfprofessionState, -->
+0 as moneys,
+0 as origin,
+0 as destination,
+0 as cx
+FROM
+yun_dynamic dt
+LEFT JOIN yun_fans f ON dt.user_id = f.user_id
+INNER JOIN yun_user u ON dt.user_id = u.user_id
+where
+	<if test="type==null or type==0">
+		f.fans_id=#{userid} 
+	</if>
+	<if test="type==null">	  		
+	  	 or 
+	  	dt.user_id=#{userid}
+	</if>
+	<if test="type==null or type==1 ">
+		<if test="type==null or type==0">
+	 	or 
+		 </if>
+	exists
+		(select yu.user_id from yun_dynamic yu where 
+	yu.latitude  between  #{minlat} and #{maxlat}  and   yu.longitude BETWEEN #{minlnt} and #{maxlnt})
+	</if> 
+	GROUP BY dt.dt_id
+<if test="type!=1">
+	union all
+<!-- 	关注人 /自己  转发的动态	 -->
+SELECT
+		1 AS types,
+		(select fx_content from yun_dynamic_forward where dtzf_id=dtzf.dtzf_id and dynamic_type=1) as zf_content,
+<!-- 		(select count(c.ithingsId) from yun_LeaveMessage c where  c.ithingsId=dt.dt_id and messageType=1) as comment_num,
+ 	(select count(dtzf_id) from yun_dynamic_forward zf where zf.tid=dt.dt_Id and dynamic_type=1) as transpond_num ,
+ 	(select count(user_id) from yun_some_praise where tid=dt.dt_id and types=1 and user_id=#{userid}) as isPraise, -->
+		0 AS task_id,
+		0 AS typename,
+(SELECT xy.rank FROM yun_xy xy
+			WHERE
+				dtzf.user_id = u.user_id
+			AND (
+				u.attitude + u.literacy + u.professional + u.punctual
+			) >= xy.lowScore
+			AND (
+				u.attitude + u.literacy + u.professional + u.punctual
+			) &lt; xy.highScore
+		) AS rank,
+		(
+			SELECT
+				xy1.rank
+			FROM
+				yun_xy xy1,
+				yun_user us
+			WHERE
+				dt.user_id = us.user_id
+			AND (
+				us.attitude + us.literacy + us.professional + us.punctual
+			) >= xy1.lowScore
+			AND (
+				us.attitude + us.literacy + us.professional + us.punctual
+			) &lt; xy1.highScore
+		) AS bzfrank,
+		dt.dt_id,
+		(
+			SELECT
+				user_id
+			FROM
+				yun_user
+			WHERE
+				user_id = dtzf.user_id
+		) AS userid,
+		dt.user_id AS bzfuserid,
+		dt.content,
+		0 AS bzfcontent,
+		dtzf.createTime AS create_time,
+		dt.createTime AS bzfcreatetime,
+		dt.thumbNumbers AS numbers,
+		u.user_name,
+		(
+			SELECT
+				user_name
+			FROM
+				yun_user
+			WHERE
+				user_id = dt.user_id
+		) AS bzfuser_name,
+		u.head_portrait,
+		(
+			SELECT
+				head_portrait
+			FROM
+				yun_user
+			WHERE
+				user_id = dt.user_id
+		) AS bzfhead_portrait,
+		(
+			SELECT
+
+			IF (age IS NOT NULL, age, 0)
+			FROM
+				yun_user
+			WHERE
+				user_id = dtzf.user_id
+		) AS age,
+
+	IF (u.age IS NOT NULL, u.age, 0) AS bzfage,
+	(
+		SELECT
+		IF (sex IS NOT NULL, sex ,- 1)
+		FROM
+			yun_user
+		WHERE
+			user_id = dtzf.user_id
+	) AS sex,
+
+IF (u.sex IS NOT NULL, u.sex ,- 1) AS bzfsex,
+ (
+	SELECT
+		count(pt.user_id)
+	FROM
+		yun_general_skills_certification pt
+	WHERE
+		pt.user_id = dtzf.user_id
+) AS rzState,
+ (
+	SELECT
+		count(pt.user_id)
+	FROM
+		yun_general_skills_certification pt
+	WHERE
+		pt.user_id = dt.user_id
+) AS bzfrzstate,
+<!-- (select count(zy.user_id) from yun_vocational_skills_certification zy where zy.user_id =dtzf.user_id) as professionState, 
+(select count(zy.user_id) from yun_vocational_skills_certification zy where zy.user_id =dt.user_id) as bzfprofessionState,  -->
+ 0 AS moneys,
+ 0 AS origin,
+ 0 AS destination,
+ 0 AS cx
+FROM
+	yun_dynamic_forward dtzf
+INNER JOIN yun_dynamic dt ON dtzf.tid = dt.dt_id
+LEFT JOIN yun_user u ON dtzf.user_id = u.user_id
+ where
+dtzf.dynamic_type=1
+	<if test="type==null or type==0">
+	and (dtzf.user_id in
+ 	(
+ 	select f.user_id from yun_fans f where f.fans_id=#{userid}
+	) 
+	</if>
+	<if test="type==null">
+	or dtzf.user_id=#{userid} 
+	</if>
+	)
+GROUP BY dtzf.dtzf_id
+</if>
+union all 
+SELECT
+		2 AS types,
+		0 AS zf_content,
+<!-- 		(select count(c.ithingsId) from yun_LeaveMessage c where  c.ithingsId=t.task_id and messageType=0) as comment_num,
+ (select count(zf.tid) from yun_dynamic_forward zf where zf.tid=t.task_id and dynamic_type=0) as transpond_num ,
+ (select count(tid) from yun_some_praise where tid=t.task_id and types=0 and user_id=#{userid}) as isPraise, -->
+		t.task_id,
+		(
+			SELECT
+				typeName
+			FROM
+				yun_task_type
+			WHERE
+				task_typeId = t.task_id
+		) AS typename,
+		(
+			SELECT
+				xy.rank
+			FROM
+				yun_xy xy
+			WHERE
+				t.userid = u.user_id
+			AND (
+				u.attitude + u.literacy + u.professional + u.punctual
+			) >= xy.lowScore
+			AND (
+				u.attitude + u.literacy + u.professional + u.punctual
+			) &lt; xy.highScore
+		) AS rank,
+		0 AS bzfrank,
+		0 AS dt_id,
+		t.userid,
+		0 AS bzfuserid,
+		t.content,
+		0 AS bzfcontent,
+		t.create_time AS create_time,
+		now() AS bzfcreatetime,
+		t.numbers,
+		u.user_name,
+		0 AS bzfuser_name,
+		u.head_portrait,
+		0 AS bzfhead_portrait,
+
+	IF (u.age IS NOT NULL, u.age, 0) AS age,
+	0 AS bzfage,
+IF (u.sex IS NOT NULL, u.sex ,- 1) AS sex,
+ 0 AS bzfsex,
+ u.rzState,
+ 0 AS bzfrzstate,
+<!--  (select count(zy.user_id) from yun_vocational_skills_certification zy where zy.user_id=u.user_id) as professionState, 
+0 as bzfprofessionState, -->
+ t.moneys AS moneys,
+ t.origin,
+ t.destination,
+ t.cx
+FROM
+	yun_task t
+LEFT JOIN yun_user u ON t.userid = u.user_id
+where  t.taskState=2  and (
+<if test="type==null or type==0"> 
+ 	 t.userid in
+ 	 (
+ 		select f.user_id from yun_fans f where f.fans_id=#{userid}
+	 ) 
+</if>
+<if test="type==null">
+	or t.userid=#{userid}
+</if>
+<if test="type==1 or type==null">
+ <if test="type!=1">
+	 	or 
+		 </if>
+ 	exists 
+		(select yu.user_id from yun_dynamic yu where 
+	yu.latitude  between  #{minlat} and #{maxlat}  and   yu.longitude BETWEEN #{minlnt} and #{maxlnt})
+ </if>
+ )
+ GROUP BY t.task_id
+<if test="type!=1">
+	union ALL
+<!-- 关注人 /自己  转发的任务	 -->
+SELECT
+		3 AS types,
+		(
+			SELECT
+				fx_content
+			FROM
+				yun_dynamic_forward
+			WHERE
+				dtzf_id = dtzf.dtzf_id
+			AND dynamic_type = 0
+		) AS zf_content,
+<!-- 		(select count(c.ithingsId) from yun_LeaveMessage c where c.ithingsId=t.task_id and messageType=0) as comment_num,
+ (select count(dtzf_id) from yun_dynamic_forward zf where zf.tid=t.task_id and dynamic_type=0) as transpond_num ,
+  (select count(tid) from yun_some_praise where tid=t.task_id and types=0 and user_id=#{userid}) as isPraise, -->
+		t.task_id,
+		(
+			SELECT
+				typeName
+			FROM
+				yun_task_type
+			WHERE
+				task_typeId = t.task_id
+		) AS typename,
+		(
+			SELECT
+				xy.rank
+			FROM
+				yun_xy xy
+			WHERE
+				dtzf.user_id = u.user_id
+			AND (
+				u.attitude + u.literacy + u.professional + u.punctual
+			) >= xy.lowScore
+			AND (
+				u.attitude + u.literacy + u.professional + u.punctual
+			) &lt; xy.highScore
+		) AS rank,
+		(
+			SELECT
+				xy.rank
+			FROM
+				yun_xy xy,
+				yun_user us
+			WHERE
+				t.userid = us.user_id
+			AND (
+				us.attitude + us.literacy + us.professional + us.punctual
+			) >= xy.lowScore
+			AND (
+				us.attitude + us.literacy + us.professional + us.punctual
+			) &lt; xy.highScore
+		) AS bzfrank,
+		0 AS dt_id,
+		(
+			SELECT
+				user_id
+			FROM
+				yun_user
+			WHERE
+				user_id = dtzf.user_id
+		) AS userid,
+		t.userid AS bzfuserid,
+		t.content,
+		0 AS bzfcontent,
+		dtzf.createTime AS create_time,
+		t.create_time AS bzfcreatetime,
+		t.numbers,
+		u.user_name,
+		(
+			SELECT
+				user_name
+			FROM
+				yun_user
+			WHERE
+				user_id = t.userid
+		) AS bzfuser_name,
+		u.head_portrait,
+		(
+			SELECT
+				head_portrait
+			FROM
+				yun_user
+			WHERE
+				user_id = t.userid
+		) AS bzfhead_portrait,
+		(
+			SELECT
+
+			IF (age IS NOT NULL, age, 0)
+			FROM
+				yun_user
+			WHERE
+				user_id = dtzf.user_id
+		) AS age,
+
+	IF (u.age IS NOT NULL, u.age, 0) AS bzfage,
+	(
+		SELECT
+
+		IF (sex IS NOT NULL, sex ,- 1)
+		FROM
+			yun_user
+		WHERE
+			user_id = dtzf.user_id
+	) AS sex,
+
+IF (u.sex IS NOT NULL, u.sex ,- 1) AS bzfsex,
+ (
+	SELECT
+		count(pt.user_id)
+	FROM
+		yun_general_skills_certification pt
+	WHERE
+		pt.user_id = dtzf.user_id
+) AS rzState,
+ (
+	SELECT
+		count(pt.user_id)
+	FROM
+		yun_general_skills_certification pt
+	WHERE
+		pt.user_id = t.userid
+) AS bzfrzstate,
+<!-- (select count(zy.user_id) from yun_vocational_skills_certification zy where zy.user_id =dtzf.user_id) as professionState,  	
+(select count(zy.user_id) from yun_vocational_skills_certification zy where zy.user_id =t.userid) as bzfprofessionState, -->
+ t.moneys AS moneys,
+ t.origin,
+ t.destination,
+ t.cx
+FROM
+	yun_dynamic_forward dtzf
+INNER JOIN yun_task t ON dtzf.tid = t.task_id
+LEFT JOIN yun_user u ON dtzf.user_id = u.user_id
+where 
+	dtzf.dynamic_type=0 and  t.taskState=2 
+	<if test="type==null or type==0">
+	and (dtzf.user_id in
+ 	(
+ 	select f.user_id from yun_fans f where f.fans_id=#{userid}
+	) 
+	</if>
+	<if test="type==null">
+	or dtzf.user_id=#{userid} 
+	</if>
+	)
+	GROUP BY dtzf.dtzf_id
+</if>	
+	) as b 
+		<if test="sex!=2">
+			WHERE  b.sex=#{sex}
+		</if>
+ORDER BY b.create_time desc
+<if test="pageu.pagestart!=null and pageu.pagesize!=null">
+	limit  #{pageu.pagestart},#{pageu.pagesize}
+</if>
+	</select>  
+	
+	<!--总的记录数-->
+	
+	<select id="alldynamicpagecount"  parameterType="Map"  resultType="int">
+	<!--关注人 /附近人 /自己  发的动态-->	
+select count(c.createTime) from  (select  
+dt.createTime as createTime,
+u.sex
+from yun_dynamic dt 
+LEFT JOIN yun_fans f on dt.user_id=f.user_id
+ INNER JOIN yun_user u on dt.user_id=u.user_id
+where
+ <if test="type==null or type==0">
+		f.fans_id=#{userid} 
+	</if>
+	<if test="type==null">	  
+	   	 or 
+	  	dt.user_id=#{userid}
+	</if>
+<if test="type==null or type==1 ">
+		<if test="type==null or type==0">
+	 	or 
+		 </if>
+		exists 
+		(select yu.user_id from yun_dynamic yu where 
+	yu.latitude  between  #{minlat} and #{maxlat}  and   yu.longitude BETWEEN #{minlnt} and #{maxlnt})
+	</if>
+	GROUP BY dt.dt_id
+<if test="type!=1">
+	union all
+	<!--关注人 /自己  转发的动态-->	
+
+select 
+dtzf.createTime as createTime,
+u.sex
+from yun_dynamic_forward dtzf
+inner  JOIN yun_dynamic dt on  dtzf.tid=dt.dt_id
+left join yun_user u on dtzf.user_id=u.user_id
+ where
+dtzf.dynamic_type=1
+	<if test="type==null or type==0">
+	and (dtzf.user_id in
+ 	(
+ 	select f.user_id from yun_fans f where f.fans_id=#{userid}
+	) 
+	</if>
+	<if test="type==null">
+<!-- 	union all
+	 select zf.user_id from yun_dynamic_forward zf where zf.user_id=#{userid} -->
+	or dtzf.user_id=#{userid} 
+	</if>
+	)
+GROUP BY dtzf.dtzf_id
+</if>
+union all 
+<!--关注人 /附近人 /自己  发的任务-->	
+select
+t.create_Time as createTime,
+u.sex
+from yun_task t
+ INNER JOIN yun_user u on t.userid=u.user_id 
+where  t.taskState=2 and (
+<if test="type==null or type==0">
+	t.userid in
+ 	(
+ 	select f.user_id from yun_fans f where f.fans_id=#{userid}
+	) 
+</if>
+<if test="type==null">
+
+	or t.userid=#{userid}
+</if>
+ <if test="type==1 or type==null">
+ <if test="type!=1">
+	 	or 
+		 </if>
+	exists 
+		(select yu.user_id from yun_dynamic yu where 
+	yu.latitude  between  #{minlat} and #{maxlat}  and   yu.longitude BETWEEN #{minlnt} and #{maxlnt})
+ </if>
+ 				)
+ GROUP BY t.task_id
+<if test="type!=1">
+	union ALL
+<!--关注人 /自己  转发的任务-->	
+select
+dtzf.createTime as createTime,
+u.sex
+from yun_dynamic_forward dtzf
+inner  JOIN yun_task t on  dtzf.tid=t.task_id
+left join yun_user u on dtzf.user_id=u.user_id
+where 
+	dtzf.dynamic_type=0 and   t.taskState=2
+	<if test="type==null or type==0">
+	and (dtzf.user_id in
+ 	(
+ 	select f.user_id from yun_fans f where f.fans_id=#{userid}
+	) 
+	</if>
+	<if test="type==null">
+<!-- 	 union all
+	 select zf.user_id from yun_dynamic_forward zf where zf.user_id=#{userid} -->
+	or dtzf.user_id=#{userid} 
+	</if>
+	)
+GROUP BY dtzf.dtzf_id
+</if>
+	) as c 	
+		<if test="sex!=2">
+		   where	 c.sex=#{sex}
+		</if>
+	
+	
+	
+	
+	</select>  
+	<!--我的 动态总页数-->
+	<select id="userdynamicnum" resultType="int" parameterType="Map">
+select count(1) from (select     
+dtzf.createTime as create_time
+from yun_dynamic_forward dtzf
+LEFT JOIN yun_dynamic dt on dtzf.tid=dt.dt_id 
+left JOIN  yun_user  u  on  dt.user_id=u.user_id
+where  dtzf.user_id=#{userid} and dtzf.dynamic_type=1 
+and dtzf.createTime is not null 
+
+union all
+
+select  
+dt.createTime as create_time
+from  yun_dynamic dt  LEFT JOIN yun_user u  on  dt.user_id=u.user_id
+where 	u.user_id=#{userid} ) as user_dynamic
+	</select>
+	
+	<!--我的动态  我发布的心情/转发的心情-->
+	<select  id="userdynamic" parameterType="Map" resultType="Map">
+select * from (select     
+ 1 as  types, 
+ (select fx_content from yun_dynamic_forward where dtzf_id=dtzf.dtzf_id and dynamic_type=1) as zf_content,
+<!-- (select count(c.ithingsId) from yun_LeaveMessage c where  c.ithingsId=dt.dt_id ) as comment_num,
+(select count(dtzf_id) from yun_dynamic_forward zf where zf.tid=dt.dt_id) as transpond_num ,   -->
+(select xy.rank from yun_xy xy where dt.user_id=u.user_id and (u.attitude+u.literacy+u.professional+u.punctual)>=xy.lowScore and (u.attitude+u.literacy+u.professional+u.punctual)&lt;xy.highScore) as rank,    
+<!-- (select count(tid) from yun_some_praise where tid=dt.dt_id and types=0 and user_id=#{userid}) as isPraise, -->
+dt.dt_id,
+dt.user_id as userid,
+dt.content,
+dtzf.createTime as create_time,
+dt.thumbNumbers as numbers, 
+u.user_name as bzf_name, 
+(select user_name  from yun_user where user_id = dtzf.user_id)  as  user_name, 
+u.head_portrait as  bezfhead_portrait, 
+(select head_portrait  from yun_user where user_id =dtzf.user_id)  as  user_head_portrait, 
+(select if(age is not null,age,0) from yun_user where user_id=#{userid}) as age,
+(select if(sex is not null,sex,-1) from yun_user where user_id=#{userid}) as sex,
+(select count(pt.user_id) from yun_general_skills_certification pt where pt.user_id =dt.user_id) as rzState , 	
+(select count(zy.user_id) from yun_vocational_skills_certification zy where zy.user_id =dt.user_id) as zystate 	
+from yun_dynamic_forward dtzf
+LEFT JOIN yun_dynamic dt on dtzf.tid=dt.dt_id 
+left JOIN  yun_user  u  on  dt.user_id=u.user_id
+where  dtzf.user_id=#{userid} and dtzf.dynamic_type=1 
+and dtzf.createTime is not null 
+
+union all
+
+select  
+ 0 as  types,
+ 0 as  zf_content,
+<!-- (select count(c.ithingsId) from yun_LeaveMessage c where  c.ithingsId=dt.dt_id ) as comment_num,
+(select count(dtzf_id) from yun_dynamic_forward zf where zf.tid=dt.dt_id) as transpond_num ,   -->
+(select xy.rank from yun_xy xy where dt.user_id=u.user_id and (u.attitude+u.literacy+u.professional+u.punctual)>=xy.lowScore and (u.attitude+u.literacy+u.professional+u.punctual)&lt;xy.highScore) as rank,    
+<!-- (select count(tid) from yun_some_praise where tid=dt.dt_id and types=0 and user_id=#{userid}) as isPraise, -->
+dt.dt_id,
+dt.user_id as userid,
+dt.content,
+dt.createTime as create_time,
+dt.thumbNumbers as numbers, 
+0 as bzf_name,  
+u.user_name  as  user_name,  
+0 as  bezfhead_portrait,
+u.head_portrait  as  user_head_portrait, 
+if(u.age is not null,u.age,0),
+if(u.sex is not null,u.sex,0),
+(select count(us.user_id) from yun_user us where us.user_id =dt.user_id) as rzState , 	
+(select count(zy.user_id) from yun_vocational_skills_certification zy where zy.user_id =dt.user_id) as zystate 	
+from  yun_dynamic dt  LEFT JOIN yun_user u  on  dt.user_id=u.user_id
+where 	u.user_id=#{userid} ) as user_dynamic
+order by  user_dynamic.create_time  desc
+limit  #{pageu.pagestart},#{pageu.pagesize}		
+	</select>
+	
+
+	
+	
+	
+	<!-- 与我相关 -->
+	<select id="Mycorrelation" parameterType="Map"  resultType="pd">
+select
+b.zf_content,
+b.task_id,
+b.typeName,
+b.theme,
+b.rank,
+b.dt_id,		
+b.userid,
+b.content,
+b.create_time,
+b.bzfcreate_time,
+b.numbers,
+b.user_name ,
+b.bzf_name,   
+b.head_portrait,
+b.bzfhead_portrait, 
+b.age,
+b.sex,
+b.rzState,     	
+b.zystate ,
+b.moneys,
+b.origin,
+b.destination,
+b.cx
+from (select 
+(select fx_content from yun_dynamic_forward where dtzf_id=dtzf.dtzf_id and dynamic_type=1) as zf_content,
+<!-- (select count(*) from yun_LeaveMessage c where c.ithingsId=dt.dt_id and messageType=1) as comment_num,
+(select count(dtzf_id) from yun_dynamic_forward zf where zf.tid=dt.dt_id and dynamic_type=1) as transpond_num , -->
+0 as task_id,
+0 as typeName,
+0 as theme,
+(select xy.rank from yun_xy xy where dt.user_id=u.user_id and (u.attitude+u.literacy+u.professional+u.punctual)>=xy.lowScore and (u.attitude+u.literacy+u.professional+u.punctual)&lt;xy.highScore) as rank,
+dt.dt_id,		
+dtzf.user_id as userid,
+dt.content,
+dtzf.createTime as create_time,
+dt.createTime as bzfcreate_time,
+dt.thumbNumbers as numbers,
+u.user_name ,
+(select user_name from yun_user where user_id=dt.user_id) as  bzf_name,   
+u.head_portrait as head_portrait,
+(select head_portrait from yun_user where user_id=dt.user_id) as bzfhead_portrait, 
+if(u.age is not null ,u.age,0) as age,
+if(u.sex is not null,u.sex,-1) as sex,
+u.rzState,     	
+(select count(1) from yun_vocational_skills_certification where userid=u.user_id) as zystate ,
+ 0 as moneys,
+0 as origin,
+0 as destination,
+0 as cx,
+2 as types
+from yun_dynamic_forward dtzf LEFT JOIN
+ yun_dynamic dt  on dtzf.tid=dt.dt_id
+LEFT JOIN yun_user u on dtzf.user_id=u.user_id
+where dtzf.user_id!=#{userid} and dt.user_id=#{userid}  and dtzf.dynamic_type=1  
+
+union all
+
+select 
+(select fx_content from yun_dynamic_forward where dtzf_id=dtzf.dtzf_id and dynamic_type=0) as zf_content,
+<!-- (select count(*) from yun_LeaveMessage c where c.ithingsId=t.task_id and messageType=1) as comment_num,
+(select count(dtzf_id) from yun_dynamic_forward zf where zf.tid=t.task_id and dynamic_type=1) as transpond_num , -->
+t.task_id,
+(select typeName from yun_task_type where task_typeId=t.task_id ) as typeName,
+t.theme,
+(select xy.rank from yun_xy xy,yun_user us where t.userid=us.user_id and (us.attitude+us.literacy+us.professional+us.punctual)>=xy.lowScore and (us.attitude+us.literacy+us.professional+us.punctual)&lt;xy.highScore) as rank,
+0 as dt_id,		
+dtzf.user_id as userid,
+t.content,
+dtzf.createTime as create_time,
+t.create_time as bzfcreate_time,
+t.numbers,   
+u.user_name as user_name , 
+(select user_name from yun_user where user_id=t.userid) as  bzf_name,  
+u.head_portrait as  head_portrait,
+(select head_portrait from yun_user where user_id=t.userid) as bzfhead_portrait ,  
+if(u.age is not null ,u.age,0) as age,
+if(u.sex is not null,u.sex,-1) as sex,
+u.rzState,     	
+(select count(1) from yun_vocational_skills_certification where user_id=t.userid) as zystate ,
+t.moneys,
+t.origin,
+t.destination,
+t.cx,
+1 as types
+FROM   yun_dynamic_forward dtzf  LEFT JOIN  yun_task t   on dtzf.tid=t.task_id
+LEFT JOIN yun_user u on dtzf.user_id=u.user_id 
+where  t.userid=#{userid} and dynamic_type=0 and t.create_time is not null 
+ 
+union all
+select 
+0 as zf_content,
+<!-- 0 as comment_num,
+0 as transpond_num , -->
+0 as task_id,
+0 as typeName,
+0 as theme,
+(select xy.rank from yun_xy xy where dt.user_id=#{userid} and (u.attitude+u.literacy+u.professional+u.punctual)>=xy.lowScore and (u.attitude+u.literacy+u.professional+u.punctual)&lt;xy.highScore) as rank,
+dt.dt_id,		
+u.user_id as userid,
+dt.content,
+praise.createTime as create_time,
+dt.createTime as bzfcreate_time,
+dt.thumbNumbers as numbers,
+u.user_name ,
+(select user_name from yun_user where user_id=#{userid}) as  bzf_name,   
+0 as head_portrait,
+(select head_portrait from yun_user where user_id=#{userid}) as bzfhead_portrait, 
+(select if(age is not null,age ,0) from yun_user where user_id=#{userid}) as  age,
+(select if(sex is not null,sex,0) from yun_user where user_id=#{userid} ) as sex,
+(select rzState from yun_user where user_id=#{userid}) as rzState,     	
+(select count(1) from yun_vocational_skills_certification where userid=#{userid}) as zystate ,
+ 0 as moneys,
+0 as origin,
+0 as destination,
+0 as cx,
+0 as types
+from yun_some_praise  praise inner JOIN 
+yun_dynamic dt on praise.tid=dt.dt_id left JOIN
+yun_user u on praise.user_id=u.user_id
+where 
+ praise.tid in (SELECT dt_id from yun_dynamic where user_id=#{userid}) and types=1
+ union all
+ select 
+0 as zf_content,
+<!-- 0 as comment_num,
+0 as transpond_num , -->
+t.task_id as task_id,
+0 as typeName,
+0 as theme,
+(select xy.rank from yun_xy xy where t.userid=#{userid} and (u.attitude+u.literacy+u.professional+u.punctual)>=xy.lowScore and (u.attitude+u.literacy+u.professional+u.punctual)&lt;xy.highScore) as rank,
+0 as dt_id,		
+u.user_id as userid,
+t.content,
+praise.createTime as create_time,
+t.create_Time as bzfcreate_time,
+t.numbers,
+u.user_name ,
+(select user_name from yun_user where user_id=#{userid}) as  bzf_name,   
+0 as head_portrait,
+(select head_portrait from yun_user where user_id=#{userid}) as bzfhead_portrait, 
+(select if(age is not null,age ,0) from yun_user where user_id=#{userid}) as  age,
+(select if(sex is not null,sex,0) from yun_user where user_id=#{userid} ) as sex,
+(select rzState from yun_user where user_id=#{userid}) as rzState,     	
+(select count(1) from yun_vocational_skills_certification where userid=#{userid}) as zystate ,
+t.moneys,
+t.origin,
+t.destination,
+t.cx,
+3 as types
+from yun_some_praise  praise inner JOIN 
+yun_task t on praise.tid=t.task_id left JOIN
+yun_user u on praise.user_id=u.user_id
+where 
+ t.userid=#{userid} and types=0
+ ) as b
+<!--谁评论了我的动态-->
+<!-- select 
+0 as zf_content,
+0 as comment_num,
+0 as transpond_num ,
+0 as task_id,
+0 as typeName,
+0 as theme,
+(select xy.rank from yun_xy xy where dt.user_id=#{userid} and (u.attitude+u.literacy+u.professional+u.punctual)>=xy.lowScore and (u.attitude+u.literacy+u.professional+u.punctual)%lt;xy.highScore) as rank,
+dt.dt_id,		
+u.user_id as userid,
+dt.content,
+dt.createTime as create_time,
+0 as bzfcreate_time,
+dt.thumbNumbers as numbers,
+u.user_name ,
+0 as  bzf_name,   
+u.head_portrait as head_portrait,
+0 as bzfhead_portrait, 
+u.age,
+u.sex,
+u.rzState,     	
+(select count(*) from yun_vocational_skills_certification where userid=#{userid}) as zystate ,
+ 0 as moneys,
+0 as origin,
+0 as destination,
+0 as cx,
+2 as types
+from  yun_leavemessage   lco inner JOIN yun_dynamic dt 
+on lco.ithingsId=dt.dt_id LEFT JOIN  
+yun_user u on lco.messagePeopleId=u.user_id
+where 
+messagePeopleId in (select messagePeopleId from yun_leavemessage where ithingsId in (SELECT dt_id from yun_dynamic where user_id=#{userid}) ) and messageType=1
+and ithingsId in (SELECT dt_id from yun_dynamic where user_id=#{userid}) -->
+
+
+<!--union all
+
+ select 
+0 as zf_content,
+(select count(*) from yun_LeaveMessage c where c.ithingsId=t.task_id and messageType=1) as comment_num,
+(select count(dtzf_id) from yun_dynamic_forward zf where zf.tid=t.task_id and dynamic_type=1) as transpond_num ,
+t.task_id,
+(select typeName from yun_task_type where task_typeId=t.task_id ) as typeName,
+t.theme,
+(select xy1.rank from yun_xy xy1,yun_user us where vip.b_id=us.user_id and (us.attitude+us.literacy+us.professional+us.punctual)>=xy1.lowScore and (us.attitude+us.literacy+us.professional+us.punctual)&lt;xy1.highScore) as bzfrank,
+0 as dt_id,		
+t.userid,
+t.content,
+vip.createTime as create_time,
+t.create_time as bzfcreate_time,
+t.numbers,
+u.user_name,   
+(select user_name from yun_user where user_id=vip.b_id) as  bzfuser_name,   
+u.head_portrait,
+(select head_portrait from yun_user where user_id=vip.b_id) as bzfhead_portrait,  
+u.age,
+u.sex,
+u.rzState,     	
+(select count(*) from yun_vocational_skills_certification where user_id=t.userid) as zystate,
+t.moneys,
+t.origin,
+t.destination,
+t.cx,
+0 as types
+from  yun_vip_push vip LEFT JOIN  yun_task t on vip.task_id=t.task_id  LEFT JOIN yun_user u on t.userid=u.user_id 
+where  vip.b_id=#{userid} and t.create_time is not null)--> 
+ORDER BY b.create_time desc
+limit  #{pageu.pagestart},#{pageu.pagesize}
+	</select>
+	
+	
+	<!--与我相关总数量-->
+	<select id="Mycorrelationnum" parameterType="Map" resultType="int">
+select count(*) from (
+select 
+dtzf.createTime as create_time
+from yun_dynamic_forward dtzf LEFT JOIN
+ yun_dynamic dt  on dtzf.tid=dt.dt_id
+LEFT JOIN yun_user u on dtzf.user_id=u.user_id
+where dtzf.user_id!=#{userid} and dt.user_id=#{userid}  and dtzf.dynamic_type=1  
+
+union all
+
+select 
+dtzf.createTime as create_time
+FROM   yun_dynamic_forward dtzf  LEFT JOIN  yun_task t   on dtzf.tid=t.task_id
+LEFT JOIN yun_user u on dtzf.user_id=u.user_id 
+where  t.userid=#{userid} and dynamic_type=0 and t.create_time is not null and dtzf.user_id!=#{userid}
+
+union all
+
+select 
+praise.createtime as create_time
+from yun_some_praise  praise inner JOIN 
+yun_dynamic dt on praise.tid=dt.dt_id left JOIN
+yun_user u on praise.user_id=u.user_id
+where 
+ praise.tid in (SELECT dt_id from yun_dynamic where user_id=#{userid}) and types=1
+ 
+  union all
+  
+ select 
+praise.createTime as create_time
+from yun_some_praise  praise inner JOIN 
+yun_task t on praise.tid=t.task_id left JOIN
+yun_user u on praise.user_id=u.user_id
+where 
+ t.userid=#{userid} and types=0
+<!-- union all
+select 
+lco.createTime as create_time
+from  yun_leavemessage   lco inner JOIN yun_dynamic dt 
+on lco.ithingsId=dt.dt_id LEFT JOIN  
+yun_user u on lco.messagePeopleId=u.user_id
+where 
+messagePeopleId in (select messagePeopleId from yun_leavemessage where ithingsId in (SELECT dt_id from yun_dynamic where user_id=#{userid}) ) and messageType=1
+and ithingsId in (SELECT dt_id from yun_dynamic where user_id=#{userid}) -->
+<!-- select 
+t.create_time
+from  yun_vip_push vip LEFT JOIN  yun_task t on vip.task_id=t.task_id  LEFT JOIN yun_user u on t.userid=u.user_id 
+where  vip.b_id=#{userid} and t.create_time is not null  -->
+) as b
+	</select>
+	
+	<select id="pricturelist" parameterType="String" resultType="Map">
+		select url from yun_mood_picture where dt_id = #{dt_id}
+	</select>
+	
+	<insert id="addzf" parameterType="Map">
+		insert into yun_dynamic_forward(user_id,tid,createTime,dynamic_type,fx_content) 
+		values(#{userid},#{tid},now(),#{types},#{fx_content})
+	</insert>
+	
+	<insert id="add_dt" parameterType="Map">
+		insert into yun_dynamic(user_id,latitude,createTime,longitude,content)
+		values(#{user_id},#{latitude},now(),#{longitude},#{content})
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="dt_id">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<insert id="add_dt_picture" parameterType="Map">
+		insert into yun_mood_picture(dt_id,url,createTime) values(#{dt_id},#{url},now())
+	</insert>
+	
+	<select id="findRunnersLimit" parameterType="Map"
+		resultType="Map">
+		select
+		u.user_id,u.user_name,u.head_portrait,u.mobilePhone
+		from yun_rob_order r
+		LEFT JOIN yun_user u on
+		r.user_id=u.user_id
+		where r.grabSingleState=1
+		<if test="task_id!=null and task_id!=''">
+		and r.task_id=#{task_id} 
+		LIMIT 10
+		</if>
+		
+	</select>
+	<select id="pslw" resultType="Map" parameterType="Map">
+		select
+		 a.comment_num,
+		 b.transpond_num,
+		 c.isPraise,
+		 d.professionState,
+		 e.bzfprofessionState
+<!-- 		 uvip.uisvip,
+		 bzfvip.bzfisvip -->
+		from 
+		(select count(1) as comment_num from yun_LeaveMessage c where c.ithingsId=#{tid} and messageType=#{type}) a,
+		 (select count(1) as transpond_num from yun_dynamic_forward zf where zf.tid=#{tid} and dynamic_type=#{type}) b,
+		 (select count(1) as isPraise from yun_some_praise where tid=#{tid} and types=#{type} and user_id=#{Myid}) c,
+		 (select count(1) as professionState from yun_vocational_skills_certification zy where zy.user_id =#{userid}) d,
+		 (select count(1) as bzfprofessionState from yun_vocational_skills_certification zy where zy.user_id =#{bzfuserid})	e
+<!-- 		 (select count(1) as uisvip from yun_user_vip zy where zy.user_id =#{userid}) uvip,
+		 (select count(1) as bzfisvip from yun_user_vip zy where zy.user_id =#{bzfuserid}) bzfvip -->
+	</select>
+	
+	
+
+	
+	<delete id="deldt" parameterType="Map">
+		delete  from yun_dynamic where  dt_id=#{dt_id}
+	</delete>
+</mapper>

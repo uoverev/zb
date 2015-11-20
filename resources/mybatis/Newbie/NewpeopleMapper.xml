@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="NewpeopleMapper">
+	<select id="newp" resultType="map">
+		select 
+		url,serial
+		from  yun_newbie_guide_picture order by serial 
+	</select>
+</mapper>

@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TaskMapper">
+
+
+	<!-- 新增任务 -->
+	<insert id="save" parameterType="pd">
+		insert into yun_task(
+		task_id,
+		task_typeId,
+		origin,
+		destination,
+		destination_ln,
+		origin_ln,
+		moneys,
+		cx,
+		contactPhone,
+		theme,
+		content,
+		periodValidity,
+		businessType,
+		taskState,
+		grabSingle,
+		destination_la,
+		origin_la,
+		numbers,
+		userid,
+		create_time,
+		expiration_time,
+		lat,
+		lng
+		) values (
+		#{task_id},
+		#{task_typeId},
+		#{origin},
+		#{destination},
+		#{destination_ln},
+		#{origin_ln},
+		#{moneys},
+		#{cx},
+		#{contactPhone},
+		#{theme},
+		#{content},
+		#{periodValidity},
+		#{businessType},
+		#{taskState},
+		#{grabSingle},
+		#{destination_la},
+		#{origin_la},
+		0,
+		#{userid},
+		now(),
+		date_add(now(), INTERVAL #{periodValidity} day),
+		#{lat},
+		#{lng}
+		)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="task_id">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+
+	<!-- 查询任务信息 -->
+	<select id="findTaskById" parameterType="java.lang.Integer"
+		resultType="pd">
+		select
+		task_id,
+		task_typeId,
+		origin,
+		destination,
+		destination_ln,
+		origin_ln,
+		moneys,
+		cx,
+		contactPhone,
+		theme,
+		content,
+		periodValidity,
+		businessType,
+		taskState,
+		grabSingle,
+		destination_la,
+		origin_la,
+		numbers,
+		userid,
+		create_time,
+		lat,
+		lng
+		from yun_task
+		where
+		task_id=#{task_id}
+	</select>
+
+	<!-- 查询任务详情 -->
+	<select id="findTaskByIdLatLng" parameterType="pd" resultType="pd">
+		select
+		IFNULL(u.user_name,'') as user_name,
+		u.user_id,
+		IFNULL(u.age,0) as age,
+		IFNULL(u.sex,-1) as sex,
+		u.head_portrait,
+		IFNULL(u.rzState,0) as rzState,
+		(select xy.rank from yun_xy xy where t.userid=u.user_id and (u.attitude+u.literacy+u.professional+u.punctual)>=xy.lowScore and (u.attitude+u.literacy+u.professional+u.punctual)&lt;xy.highScore) as rank,
+		(select count(yvsc.z_id) from yun_vocational_skills_certification yvsc where yvsc.user_id=u.user_id and yvsc.state=1) as professionState,
+		(select count(v.uv_id) from yun_user_vip v where v.endTime>NOW() and v.user_id=t.userid) as vip,	
+		t.task_id,
+		t.task_typeId,
+		t.origin,
+		t.destination,
+		t.destination_ln,
+		t.origin_ln,
+		t.moneys,
+		t.cx,
+		t.contactPhone,
+		t.theme,
+		t.content,
+		t.periodValidity,
+		t.businessType,
+		t.taskState,
+		t.grabSingle,
+		t.destination_la,
+		t.origin_la,
+		t.numbers,
+		t.userid,
+		t.create_time,
+		t.lat,
+		t.lng,
+		t.lls,
+		t.expiration_time,
+		(select count(*) from yun_rob_order ro where ro.task_id=t.task_id and ro.user_id=#{user_id} and ro.grabSingleState=1) as isGrab,
+		ROUND(6378.138*2*ASIN(SQRT(POW(SIN((#{lat}*PI()/180-t.lat*PI()/180)/2),2)+COS(#{lat}*PI()/180)*COS(t.lat*PI()/180)*POW(SIN((#{lng}*PI()/180-t.lng*PI()/180)/2),2)))*1000)
+		AS distance,
+		o.payuserId
+		from yun_task t
+		INNER JOIN yun_user u on t.userid=u.user_id
+		LEFT JOIN yun_order o on t.task_id=o.task_id
+		where
+		t.task_id=#{task_id}
+	</select>
+
+		<!-- 增加浏览数 -->
+	<update id="editlls" parameterType="java.lang.Integer">
+		update yun_task
+		set
+		lls=IFNULL(lls,0)+1
+		where
+		task_id = #{task_id}
+	</update>
+
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update yun_task
+		set
+		task_typeId=#{task_typeId},
+		origin=#{origin},
+		destination=#{destination},
+		destination_ln=#{destination_ln},
+		origin_ln=#{origin_ln},
+		moneys=#{moneys},
+		cx=#{cx},
+		contactPhone=#{contactPhone},
+		theme=#{theme},
+		content=#{content},
+		periodValidity=#{periodValidity},
+		businessType=#{businessType},
+		taskState=#{taskState},
+		grabSingle=#{grabSingle},
+		destination_la=#{destination_la},
+		origin_la=#{origin_la},
+		numbers=#{numbers},
+		userid=#{userid},
+		create_time=#{create_time}
+		where
+		task_id = #{task_id}
+	</update>
+	
+	
+		<!-- 确认跑客，修改任务状态 -->
+	<update id="confirmSelect" parameterType="pd">
+		update yun_task
+		set
+		taskState=#{taskState},
+		grabSingle=#{grabSingle}
+		where
+		task_id = #{task_id}
+	</update>
+	
+
+	<!-- 修改 -->
+	<update id="editTaskState" parameterType="pd">
+		update yun_task
+		set
+		taskState=#{taskState}
+		where
+		task_id = #{task_id}
+	</update>
+
+
+	<!-- 查询附近任务信息 -->
+	<select id="findNearTaskList" parameterType="pd" resultType="pd">
+		SELECT
+		t.task_id,u.user_id,t.taskState,IFNULL(u.rzState,0) as rzState,IFNULL(u.user_name,'') as user_name,u.head_portrait,IFNULL(u.age,0) as age,IFNULL(u.sex,-1) as sex,t.origin,t.destination,t.moneys,t.cx,t.theme,IFNULL(t.numbers,0) as numbers,t.create_time,t.businessType,IFNULL(t.lls,0) as lls,
+		(select count(sp.d_id) from yun_some_praise sp where sp.types=0 and sp.tid=t.task_id and sp.user_id=#{userid} ) as isPraise,
+		(select xy.rank from yun_xy xy where t.userid=u.user_id and (u.attitude+u.literacy+u.professional+u.punctual)>=xy.lowScore and (u.attitude+u.literacy+u.professional+u.punctual)&lt;xy.highScore) as rank,
+		(select count(yvsc.z_id) from yun_vocational_skills_certification yvsc where yvsc.user_id=u.user_id and yvsc.state=1) as professionState,
+		(select count(d.dtzf_id) from yun_dynamic_forward d where d.tid=t.task_id and d.dynamic_type=0) as transpond_num,
+		(select count(m.ly_id) from yun_LeaveMessage m where m.ithingsId=t.task_id and m.messageType=0 and (m.respond_eopleId is null or m.respond_eopleId=0)) as comment_num,
+		(select count(*) from yun_rob_order ro where ro.task_id=t.task_id and ro.user_id=#{userid} and ro.grabSingleState=1) as isGrab,
+		(select count(v.uv_id) from yun_user_vip v where v.endTime>NOW() and v.user_id=t.userid) as vip,	
+		ROUND(6378.138*2*ASIN(SQRT(POW(SIN((#{latitude}*PI()/180-t.lat*PI()/180)/2),2)+COS(#{latitude}*PI()/180)*COS(t.lat*PI()/180)*POW(SIN((#{longitude}*PI()/180-t.lng*PI()/180)/2),2)))*1000)
+		AS distance
+		FROM yun_task t
+		INNER JOIN yun_user u on t.userid=u.user_id
+		where   t.businessType=#{types}
+		and t.lat is not null and t.lng is not null
+		and ((t.taskState=2 and t.expiration_time>now()) or	t.taskState=4 )
+		<if test="content!=null and content!=''">
+		and(t.origin like CONCAT('%',#{content},'%') or t.destination like CONCAT('%',#{content},'%') or t.theme like CONCAT('%',#{content},'%')
+			or u.age like CONCAT('%',#{content},'%'))
+		</if>  
+		HAVING distance&lt;50000
+		ORDER BY t.create_time DESC
+		LIMIT #{start},#{limit};
+	</select>
+	
+		<!-- 查询附近任务信息个数 -->
+	<select id="countNearTaskList" parameterType="pd" resultType="java.lang.Integer">
+		SELECT
+		count(*)
+		FROM yun_task t
+		INNER JOIN yun_user u on t.userid=u.user_id
+		where   t.businessType=#{types}
+		and t.lat is not null and t.lng is not null
+		and ((t.taskState=2 and t.expiration_time>now()) or	t.taskState=4  )
+		<if test="content!=null and content!=''">
+		and(t.origin like CONCAT('%',#{content},'%') or t.destination like CONCAT('%',#{content},'%') or t.theme like CONCAT('%',#{content},'%')
+			or u.age like CONCAT('%',#{content},'%'))
+		</if> 
+		and ROUND(6378.138*2*ASIN(SQRT(POW(SIN((#{latitude}*PI()/180-t.lat*PI()/180)/2),2)+COS(#{latitude}*PI()/180)*COS(t.lat*PI()/180)*POW(SIN((#{longitude}*PI()/180-t.lng*PI()/180)/2),2)))*1000)&lt;50000
+
+		
+	</select>
+	
+	<!-- 查询我发布或已抢单的任务信息  -->
+	<select id="findMyReleaseTaskList" parameterType="pd"
+		resultType="pd">
+		SELECT
+		IFNULL(u.user_name,'') as user_name,
+		IFNULL(u.rzState,0) as rzState,
+		u.head_portrait,
+		IFNULL(u.age,0) as age,
+		IFNULL(u.sex,-1) as sex,
+		t.task_id,
+		t.origin,t.destination,
+		t.moneys,t.cx,t.theme,t.create_time,
+		t.taskState,t.businessType,
+		t.userid,t.grabSingle,
+		(select xy.rank from yun_xy xy where t.userid=u.user_id and (u.attitude+u.literacy+u.professional+u.punctual)>=xy.lowScore and (u.attitude+u.literacy+u.professional+u.punctual)&lt;xy.highScore) as rank,
+		(select count(yvsc.z_id) from yun_vocational_skills_certification yvsc where yvsc.user_id=u.user_id and yvsc.state=1) as professionState,
+		(select count(v.uv_id) from yun_user_vip v where v.endTime>NOW() and v.user_id=t.userid) as vip
+		FROM yun_task t
+		INNER JOIN yun_user u on
+		t.userid=u.user_id
+		where 
+		<if test="types==0">
+			t.userid=#{userid}
+		</if>
+		<if test="types==1">
+			t.grabSingle=#{userid}
+		</if>
+		<if test="content!=null and content!=''">
+		and(t.origin like CONCAT('%',#{content},'%') or t.destination like CONCAT('%',#{content},'%') or t.theme like CONCAT('%',#{content},'%'))
+		</if>
+		ORDER BY t.create_time DESC
+		LIMIT #{start},#{limit};
+	</select>
+	
+		<!-- 查询我发布或已抢单的任务信息数 -->
+	<select id="countMyReleaseTaskList" parameterType="pd"
+		resultType="java.lang.Integer">
+		SELECT
+		count(*)
+		FROM yun_task t
+		INNER JOIN yun_user u on
+		t.userid=u.user_id
+		where 
+		<if test="types==0">
+			t.userid=#{userid}
+		</if>
+		<if test="types==1">
+			t.grabSingle=#{userid}
+		</if>
+		<if test="content!=null and content!=''">
+		and(t.origin like CONCAT('%',#{content},'%') or t.destination like CONCAT('%',#{content},'%') or t.theme like CONCAT('%',#{content},'%'))
+		</if>
+		ORDER BY t.create_time DESC;
+	</select>
+	
+	<!-- 查询我已抢单的任务信息 -->
+	<select id="findMyGrabTaskList" parameterType="pd" resultType="pd">
+		SELECT
+		IFNULL(u.user_name,'') as user_name,
+		u.rzState,
+		u.head_portrait,
+		IFNULL(u.age,0) as age,
+		IFNULL(u.sex,-1) as sex,
+		t.task_id,
+		t.origin,t.destination,
+		t.moneys,t.cx,t.theme,
+		t.create_time,t.taskState,
+		t.userid,t.grabSingle,t.businessType,
+		FROM yun_task t
+		INNER JOIN yun_user u on t.userid=u.user_id
+		where
+		t.grabSingle=#{userid}
+		<if test="content!=null and content!=''">
+			and t.theme like CONCAT('%',#{content},'%')
+		</if>
+		ORDER BY t.create_time DESC;
+	</select>
+
+	<!-- 增加抢单信息 -->
+	<insert id="saveRobOrder" parameterType="pd">
+		insert into
+		yun_rob_order(
+		user_id,
+		task_id,
+		createTime,
+		grabSingleState,
+		cancelTime
+		)
+		values (
+		#{user_id},
+		#{task_id},
+		now(),
+		#{grabSingleState},
+		#{cancelTime}
+		)
+	</insert>
+
+	<!-- 查询跑客抢单信息 -->
+	<select id="findRobOrder" parameterType="pd" resultType="pd">
+		select
+		q_id,
+		user_id,
+		task_id,
+		createTime,
+		grabSingleState,
+		cancelTime
+		from
+		yun_rob_order
+		where
+		user_id = #{user_id}
+		and task_id=#{task_id}
+	</select>
+
+	<!-- 修改抢单信息 -->
+	<update id="editRobOrder" parameterType="pd">
+		update yun_rob_order
+		set
+		createTime=#{createTime},
+		grabSingleState=#{grabSingleState},
+		cancelTime=#{cancelTime}
+		where
+		user_id = #{user_id}
+		and
+		task_id=#{task_id}
+	</update>
+	<!-- 查询抢单跑客列表 -->
+	<select id="findRunnersList" parameterType="pd"
+		resultType="pd">
+		select
+		u.user_id,
+		IFNULL(u.rzState,0) as rzState,
+		u.mobilePhone,
+		u.head_portrait,
+		IFNULL(u.user_name,'') as user_name,
+		IFNULL(u.age,0) as age,
+		IFNULL(u.sex,-1) as sex,
+		u.signature,
+		u.lat,u.lnt ,r.createTime,t.userid
+		from yun_rob_order r
+		INNER JOIN yun_user u on r.user_id=u.user_id
+		INNER JOIN yun_task t on r.task_id=t.task_id
+		where r.grabSingleState=1
+		and r.task_id= #{task_id};
+	</select>
+	
+	<!-- 查询跑客抢单信息(前十个)2 -->
+	<select id="findRunnersLimit" parameterType="pd"
+		resultType="pd">
+		select
+		u.user_id,u.user_name,u.head_portrait,u.mobilePhone
+		from yun_rob_order r
+		INNER JOIN yun_user u on
+		r.user_id=u.user_id
+		where r.grabSingleState=1
+		<if test="user_id!=null and user_id!=''">
+		and r.user_id= #{user_id} 
+		</if>
+		<if test="task_id!=null and task_id!=''">
+		and r.task_id= #{task_id} 
+		LIMIT 10
+		</if>
+		
+	</select>
+
+	<insert id="saveConfirmTask" parameterType="pd">
+		insert into
+		yun_confirm_task(
+		tq_id,
+		task_id,
+		user_id,
+		pkId,
+		createTime
+		) values (
+		#{tq_id},
+		#{task_id},
+		#{user_id},
+		#{pkId},
+		now()
+		)
+	</insert>
+	<!-- 查询单个用户的极光推送ID -->
+	<select id="findPushIdsByUserid" parameterType="pd" resultType="pd">
+		select u.pushId,u.user_id from yun_user u 
+		where  u.user_id=#{user_id} and 
+		u.user_id not in (select DISTINCT f.user_id from  yun_free_talk_time f where  CURTIME()>f.startTime and f.endTime>CURTIME() and f.user_id=#{user_id})
+	</select>
+	<!-- 查询附近用户的极光推送ID -->
+	<select id="findNearPushIds" parameterType="pd" resultType="String">
+		select u.pushId from yun_user u where 
+		u.pushId is not null and u.pushId !="" and u.user_id !=#{userid} and
+		ROUND(6378.138*2*ASIN(SQRT(POW(SIN((#{lat}*PI()/180-u.lat*PI()/180)/2),2)+COS(#{lat}*PI()/180)*COS(u.lat*PI()/180)*POW(SIN((#{lng}*PI()/180-u.lnt*PI()/180)/2),2)))*1000)&lt;50000
+		and u.user_id not in (select f.user_id from  yun_free_talk_time f where  CURTIME()>f.startTime and f.endTime>CURTIME())
+	</select>
+
+	<!-- 查询未被选中的跑客pushid -->
+	<select id="findRunnersPushIds" parameterType="pd" resultType="String">
+		select u.pushId from
+		yun_rob_order r
+		INNER JOIN yun_user u on r.user_id=u.user_id
+		where r.grabSingleState=1 and u.pushId is not null and u.pushId !="" and r.task_id=#{task_id}
+ 		and u.user_id !=#{user_id}
+	</select>
+	
+	<!-- 新增取消任务记录 -->
+	<insert id="saveCancelTask" parameterType="pd">
+		insert into yun_cancel_the_task(
+		cid,
+		userId,
+		task_id,
+		createTime
+		) values (
+		#{cid},
+		#{userId},
+		#{task_id},
+		now()
+		)
+		<selectKey resultType="java.lang.Integer" order="AFTER"
+			keyProperty="cid">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	
+	<!-- 查询取消任务记录 -->
+	<select id="findCancelTask" parameterType="String" resultType="pd">
+		select
+		cid,
+		userId,
+		task_id,
+		createTime
+		from
+		yun_cancel_the_task
+		where task_id =#{task_id}
+	</select>
+
+		<!-- 查询过期任务信息 -->
+	<select id="findExpirationTask" resultType="pd">
+		select
+		task_id,
+		task_typeId,
+		origin,
+		destination,
+		destination_ln,
+		origin_ln,
+		moneys,
+		cx,
+		contactPhone,
+		theme,
+		content,
+		periodValidity,
+		businessType,
+		taskState,
+		grabSingle,
+		destination_la,
+		origin_la,
+		numbers,
+		userid,
+		create_time,
+		expiration_time,
+		lat,
+		lng
+		from yun_task
+		where taskState=2 and NOW()>expiration_time
+	</select>
+
+</mapper>

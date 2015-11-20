@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RefundMapper">
+
+
+	<!-- 新增任务 -->
+	<insert id="saveRefund" parameterType="pd" >
+		insert into yun_refund_request_form(
+		 rid,
+  		 task_id,
+  		 userId,
+  		 tkTime,
+ 		 moneys,
+ 	 	 state ,
+ 	 	 types,
+ 	 	 yy
+		) values (
+		#{rid},
+		#{task_id},
+		#{userId},
+		now(),
+		#{moneys},
+		#{state},
+		#{types},
+		#{yy}
+		)
+	<selectKey resultType="int"  order="AFTER" keyProperty="rid">  
+          SELECT LAST_INSERT_ID() 
+    </selectKey>  
+	</insert>
+
+
+	<!-- 修改 -->
+	<update id="editRefundState" parameterType="pd">
+		update yun_refund_request_form
+		set
+ 	 	 state=#{state}
+		where
+		rid = #{rid}
+	</update>
+
+
+	<!-- 通过任务ID获取数据 -->
+	<select id="findRefundByTaskId" parameterType="java.lang.String" resultType="pd">
+		select
+		 rid,
+  		 task_id,
+  		 userId,
+  		 tkTime,
+ 		 moneys,
+ 	 	 state ,
+ 	 	 types,
+ 	 	 yy
+		from yun_refund_request_form
+		where
+		task_id =#{task_id}
+	</select>
+
+
+	
+</mapper>

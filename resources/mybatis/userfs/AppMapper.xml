@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AppMapper">
+	
+	<select id="fs" parameterType="Map" resultType="Map">
+
+	SELECT  y1.user_id,y1.user_name,y1.head_portrait ,fs.createTime,(select count(fans_id) from yun_fans WHERE user_id=#{userid}) as count 
+	from  yun_user y1,yun_fans fs 
+	 where  y1.user_id=fs.fans_id and  fs.user_id=#{userid}	
+	 order by createTime desc
+	 limit #{pageu.pagestart},#{pageu.pagesize}
+	</select>
+	<select id="fsnum" parameterType="Map" resultType="int">
+		select count(1) from yun_fans where user_id=#{userid} 
+	</select>
+</mapper>

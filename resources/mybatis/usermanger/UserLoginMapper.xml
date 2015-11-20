@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UserLoginMapper">
+
+	<!-- 根据条件查询用户信息 -->
+	<select id="findByUser" parameterType="Map" resultType="Map">
+		select
+		ys.user_id,ys.head_portrait,if(payPassword is null,'0','1') as
+		pwdState,mobilePhone,loginPassword from yun_user ys
+		where 1=1
+		<if test="password!=null">
+		and ys.loginPassword=#{password}
+		</if>
+		 and ys.mobilePhone=#{mobilePhone};
+		
+	</select>
+	<!-- 根据多个用户ID查询用户信息 -->
+	<select id="findByUsersByIds" parameterType="Map" resultType="Map">
+		select yu.mobilePhone,yu.user_id,yu.user_name,yu.head_portrait from
+		yun_user yu where user_id in
+		<foreach collection="list" item="item" open="(" separator=","
+			close=")">
+			#{item}
+		</foreach>
+	</select>
+	<!-- 根据条件查询多条用户信息 -->
+	<select id="findtUserByExmaple" parameterType="Map" resultType="Map">
+		select
+		ys.user_id,ys.mobilePhone,ys.head_portrait,ys.user_name,ys.sex,ys.signature,
+		ys.addr,ys.addrState,ys.emotional,ys.emotionalState,ys.school,ys.schoolState,ys.hometown,
+		ys.hometownState,ys.visitors,ys.qrcode,ys.pushId,ys.createTime,ys.payPassword,ys.province,
+		ys.city,ys.area,ys.topId,ys.lat,ys.lnt,ys.age,ys.yhj,ys.moneys,ys.loginPassword,ys.rzState
+		,ys.phoneCode
+		<if test="userId!=null">
+			, rank,(highScore+1) as nextScore,lowScore,(select
+			a.attitude+a.literacy+a.professional+a.punctual 
+			from
+			yun_user a where 1=1
+			and a.user_id=#{userId})as totalScore
+		</if>
+		from yun_user ys
+		<if test="userId!=null">
+			,(select rank,urls,highScore,lowScore from
+			yun_xy yx where (select
+			a.attitude+a.literacy+a.professional+a.punctual as totalprice
+			from
+			yun_user a where 1=1
+			and a.user_id=#{userId}
+			) between yx.lowScore and
+			yx.highScore)as b
+		</if>
+		where 1=1
+		<if test="userId!=null">
+			and ys.user_id=#{userId}
+		</if>
+		<if test="userName!=null">
+			and ys.user_name=#{userName}
+		</if>
+		<if test="phoneCode!=null and phoneCode!=''">
+			and ys.phoneCode=#{phoneCode}
+		</if>
+		<if test="password!=null">
+			and ys.loginPassword=#{password}
+		</if>
+		<if test="paypassword!=null">
+			and ys.payPassword=#{payPassword}
+		</if>
+		<if test="mobilePhone!=null">
+			and ys.mobilePhone=#{mobilePhone}
+		</if>
+		<if test="minlat!=null and maxlat!=''">
+			and ys.lnt between #{minlat} and #{maxlat}
+		</if>
+		<if test="minlnt!=null and maxlnt!=''">
+			and ys.lat between #{minlnt} and #{maxlnt}
+		</if>
+		<if test="sex!=null and sex!=''">
+			and ys.sex=#{sex}
+		</if>
+		<if test="startAge!=null and startAge!=''">
+			<if test="endAge!=null and endAge!=''">
+				and ys.age between #{startAge} and #{endAge}
+			</if>
+		</if>
+       limit 0,40
+	</select>
+
+	<!-- 查找用户兴趣 -->
+	<select id="findByUserInterest" parameterType="Map" resultType="Map">
+		select yit.xq_id,yit.interestName from yun_user yu, yun_interest_type
+		yit ,yun_user_interest yui where 1=1 and yu.user_id=yui.user_id and
+		yit.xq_id=yui.xq_id
+		<if test="userId!=null">
+			and yu.user_id=#{userId}
+		</if>
+		<if test="interestId!=null">
+			and yit.xq_id=#{interestId}
+		</if>
+	</select>
+	<!-- 查找用户没选的兴趣 -->
+	<select id="findUserOptionalInterest" parameterType="Map"
+		resultType="Map">
+		select yit.xq_id,yit.interestName from yun_interest_type
+		yit where yit.xq_id not in(
+		select yit.xq_id from yun_user yu,
+		yun_interest_type
+		yit ,yun_user_interest
+		yui where 1=1 and
+		yu.user_id=yui.user_id and
+		yit.xq_id=yui.xq_id
+		and yu.user_id=#{userId})
+	</select>
+
+	<!-- 查找职业技能 -->
+	<select id="findProfessionalSkill" parameterType="Map"
+		resultType="Map">
+		select
+		ytu.tu_id,ytu.user_id,yty.task_typeId,yty.typeName,yty.createTime,yty.job_type
+		from yun_task_user ytu,yun_task_type yty
+		where
+		ytu.task_id=yty.task_typeId
+		<if test="userId!=null">
+			and ytu.user_id=#{userId}
+		</if>
+		<if test="task_id!=null">
+			and ytu.task_id=#{task_id}
+		</if>
+	</select>
+	<!-- 查找所有技能 -->
+	<select id="findSkill" parameterType="Map" resultType="Map">
+		select
+		ytt.task_typeId,ytt.typeName,ytt.job_type from yun_task_type ytt
+	</select>
+	<!-- 查找身份认证信息 -->
+	<select id="findIDInfo" parameterType="Map" resultType="Map">
+		select
+		p_id,user_id,namess,idCard,addr,card_up,card_zm,card_fm,state,task_typeId,note
+		from yun_general_skills_certification where user_id=#{userId}
+	</select>
+	<!-- 查找职业认证信息 -->
+	<select id="findSkillCheck" parameterType="Map" resultType="Map">
+		select
+		z_id,user_id,task_typeId,job_cl,state,note from
+		yun_vocational_skills_certification
+		where user_id=#{userId} and task_typeId=#{jobId}
+	</select>
+
+	<!-- 查找用户累计收入 -->
+	<select id="findByUserIncomings" parameterType="Map" resultType="Map">
+		select (yo.moneys+coupons-company_earnings)as
+		money,theme,yt.create_time from yun_order yo,yun_task yt where
+		yo.task_id=yt.task_id and yo.payeeId=#{userId} and payState='2' and
+		yt.taskState='4'
+		union all
+		select yppr.moneys,'充值'as theme ,createtime
+		from yun_prepaid_phone_records
+		yppr where user_id=#{userId}
+		union all
+		select moneys,yy,tktime from yun_refund_request_form where state=1 and
+		userId=#{userId}
+		order by create_time desc
+	</select>
+	<!-- 查找用户全部消费记录 -->
+	<select id="findCounsumeInfo" parameterType="Map" resultType="Map">
+		select yo.moneys,theme,yo.orderDate as cosumtime from yun_order
+		yo,yun_task yt where yo.payuserId=#{userId} and yo.task_id=yt.task_id
+		and yo.payState=2
+		union all
+		select jg,'会员费用' as theme,createTime from yun_member_open_water where
+		user_id=#{userId}
+		union all
+		select money,'申请推广人' as theme,apply_for_time  from yun_apply_for_partner ya where ya.pay_type='1'  and ya.user_id=#{userId}
+		order by cosumtime desc
+	</select>
+	<!-- 查找用户相册图片 -->
+	<select id="findUserAlbum" parameterType="Map" resultType="Map">
+		select xc_id,user_id,url from yun_photo_album where user_id=#{userId}
+	</select>
+	<!-- 查找用户相册图片数量 -->
+	<select id="findAlbumNumber" parameterType="Map" resultType="Map">
+		select count(1) as number,url from 
+		yun_photo_album where
+		user_id=#{userId}
+	</select>
+	<!--查找关注的人 -->
+	<select id="findCarePeople" parameterType="Map" resultType="Map">
+		select
+		yf.user_id,yf.createTime,yf.fans_id,ys.mobilePhone,ys.user_name,ys.head_portrait
+		from
+		yun_fans yf,yun_user ys where yf.user_id=ys.user_id
+		<if test="fansId!=null">
+			and
+			yf.fans_id=#{fansId}
+		</if>
+		<if test="userId!=null">
+			and
+			yf.user_id=#{userId}
+		</if>
+
+	</select>
+	<!--查找用户总金额，消费总金额，收入总金额，提现总金额 -->
+	<select id="findTotalMoneys" parameterType="Map" resultType="Map">
+		<!-- 用户资产 -->
+		select
+		(select moneys from yun_user yu where yu.user_id=#{userId})
+		as
+		money,
+		<!--用户总收入 -->
+		(
+		(select if(sum(yo.moneys+coupons-company_earnings)is
+		null,0,sum(yo.moneys+coupons-company_earnings)) from yun_order
+		yo,yun_task yt where yo.task_id=yt.task_id and yo.payeeId=#{userId}
+		and
+		payState='2' and yt.taskState='4')
+		+(select if(sum(yppr.moneys)is
+		null,0,sum(yppr.moneys))from
+		yun_prepaid_phone_records yppr where
+		user_id=#{userId})
+		+(select if(sum(moneys) is null,0,sum(moneys)) from
+		yun_refund_request_form
+		where state=1 and userId=#{userId})
+
+		) as
+		incomings,
+		<!--用户总消费 -->
+		( (select if(sum(yo.moneys)is null,0,sum(yo.moneys)) from yun_order yo
+		where yo.payuserId=#{userId} and yo.payState=2)
+		+(select if(sum(jg) is null,0,sum(jg))
+		from
+		yun_member_open_water where
+		user_id=#{userId})
+		)as cousumptions ,
+		<!-- 提现总金额 -->
+		(select if(sum(moneys) is null,0,sum(moneys)) from
+		yun_pay_treasure_show_records where tx_Id=#{userId}) as
+		withdrawMoneys;
+	</select>
+		<!-- 查找推荐人用户信息 -->
+		<select id="findTopUserById" parameterType="Map" resultType="Map">
+		select
+		ys.user_id,ys.mobilePhone,ys.head_portrait,ys.user_name,ys.sex,ys.signature,
+		ys.addr,ys.addrState,ys.emotional,ys.emotionalState,ys.school,ys.schoolState,ys.hometown,
+		ys.hometownState,ys.visitors,ys.qrcode,ys.pushId,ys.createTime,ys.payPassword,ys.province,
+		ys.city,ys.area,ys.topId,ys.lat,ys.lnt,ys.age,ys.yhj,ys.moneys,ys.loginPassword,ys.rzState
+		,ys.phoneCode,ys.daig,ys.tcbl 
+		from yun_user ys
+		where ys.user_id=#{user_id}
+		</select>
+</mapper>

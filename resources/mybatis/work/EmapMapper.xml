@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EmapMapper">
+	
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into TB_EMAP(
+			EMAPNAME,	
+			PS,	
+			EMAP_ID
+		) values (
+			#{EMAPNAME},	
+			#{PS},	
+			#{EMAP_ID}
+		)
+	</insert>
+	
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from TB_EMAP
+		where 
+			EMAP_ID = #{EMAP_ID}
+	</delete>
+	
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update  TB_EMAP
+			set 
+				EMAPNAME = #{EMAPNAME},
+				PS = #{PS},
+			EMAP_ID = EMAP_ID
+			where 
+				EMAP_ID = #{EMAP_ID}
+	</update>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+			EMAPNAME,	
+			PS,	
+			EMAP_ID
+		from 
+			TB_EMAP
+		where 
+			EMAP_ID = #{EMAP_ID}
+	</select>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+				a.EMAPNAME,	
+				a.PS,	
+				a.EMAP_ID
+		from 
+				TB_EMAP a
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+				a.EMAPNAME,	
+				a.PS,	
+				a.EMAP_ID
+		from 
+				TB_EMAP a
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from TB_EMAP
+		where 
+			EMAP_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	
+</mapper>

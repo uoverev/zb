@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SystemMapper">
+	<select id="systemts" resultType="Map">
+		select  
+		content,
+		pushTime,
+		state from
+		yun_system_message  
+		where state=1
+		order by pushTime desc
+		limit  #{pagestart},#{pagesize}
+	</select>
+	<!--系统消息总数-->
+	<select id="msgnum" resultType="int">
+		select count(1)  from yun_system_message  where state=1
+ 	</select>
+</mapper>

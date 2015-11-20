@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PartnerMapper">
+
+
+	<!-- 新增 -->
+	<insert id="save" parameterType="pd">
+		insert into yun_apply_for_partner(
+		aId,
+		user_id,
+		application_level,
+		real_name,
+		phone_number,
+		apply_for_time,
+		application_status,
+		pay_type,
+		tradeNO
+		)
+		values (
+		#{aId},
+		#{user_id},
+		#{application_level},
+		#{real_name},
+		#{phone_number},
+		now(),
+		#{application_status},
+		#{pay_type},
+		#{tradeNO}
+		)
+		<selectKey resultType="int" order="AFTER" keyProperty="aId">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+
+
+
+
+
+
+	<!-- 通过任务ID获取数据 -->
+	<select id="findByUserId" parameterType="java.lang.String"
+		resultType="pd">
+		select 
+		aId,
+		user_id,
+		application_level,
+		real_name,
+		phone_number,
+		apply_for_time,
+		application_status,
+		pay_type
+		from
+		yun_apply_for_partner
+		where
+		user_id
+		=#{user_id}
+	</select>
+
+
+
+</mapper>

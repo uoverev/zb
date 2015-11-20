@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AuctionMapper">
+
+
+	<!-- 新增 -->
+	<insert id="saveApply" parameterType="java.util.Map">
+		insert into
+		YUN_AUCTION_APPLY(
+		user_id,
+		name,
+		company,
+		position,
+		phone,
+		apply_time
+		)
+		values (
+		#{userId},
+		#{name},
+		#{company},
+		#{position},
+		#{phone},
+		#{applyTime}
+		)
+	</insert>
+
+	<select id="aucList" parameterType="java.util.Map"
+		resultType="com.ypkj.zubu.service.auction.bean.AuctionList">
+		SELECT
+		a.user_id uId,
+		b.user_name uName,
+		a.auction_name aName,
+		a.auction_id aId,
+		a.bid_num bidNum,
+		a.apply_num applyNum,
+		a.end_time
+		endTime,
+		a.img_url imgUrl
+		FROM
+		yun_auction a
+		LEFT JOIN yun_user b on
+		a.user_id = b.user_id
+		<if test="ind != null">
+			where ind_belong like CONCAT('%',#{ind},'#%')
+		</if>
+		limit #{pageFrom},#{pageSize}
+	</select>
+
+	<select id="selectHighest" parameterType="java.util.Map"
+		resultType="com.ypkj.zubu.service.auction.bean.AuctionRecord">
+		select user_id userId,price price from yun_auction_record
+		order by price desc;
+	</select>
+
+	<select id="checkMargin" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select * from yun_auction_order
+		where auction_id =
+		#{auctionId} and
+		user_id=#{userId} and order_type = 0 and pay_state=1
+	</select>
+
+	<insert id="saveRecord" parameterType="java.util.Map">
+		insert into
+		yun_auction_record(auction_id,user_id,price,create_time)
+		values(#{auctionId},#{userId},#{price},#{createTime})
+	</insert>
+
+	<select id="findAuction" parameterType="java.lang.Integer" resultType="com.ypkj.zubu.service.auction.bean.Auction">
+		SELECT
+		auction_id auctionId,
+		auction_name auctionName,
+		start_price
+		startPrice,
+		bond,
+		premium_range premiumRange,
+		auction_content
+		auctionContent,
+		user_id userId,
+		bid_user_id bidUserId,
+		create_time
+		createTime,
+		start_time startTime,
+		end_time endTime,
+		ind_belong indBelong,
+		apply_num
+		applyNum,
+		bid_num bidNum,
+		img_url imgUrl
+		from
+		yun_auction
+		where
+		auction_id = #{auctionId}
+	</select>
+
+	<update id="plusBidNum" parameterType="java.lang.Integer">
+		update yun_auction
+		set bid_num = bid_num+1
+		where auction_id = #{auctionId}
+	</update>
+
+	<insert id="saveMsg" parameterType="java.util.Map">
+		insert into yun_user_auction(auction_id,user_id,type,status,content,update_time)
+		values(#{auctionId},#{userId},#{type},#{status},#{content},#{updateTime})
+	</insert>
+	
+	<update id="updateMsg" parameterType="java.util.Map">
+	    update yun_user_auction
+	    set content=#{content},update_time=#{updateTime}
+	    <if test="status!=null ">
+	        ,status=#{status}
+	    </if>
+	    where auction_id=#{auctionId} and user_id = #{userId}
+	</update>
+	<select id="selectMsg" parameterType="java.util.Map" resultType="com.ypkj.zubu.service.auction.bean.UserAuction">
+	    select id ,auction_id auctionId,user_id userId,type type ,status status ,content content ,update_time updateTime
+	    from yun_user_auction
+	    where auction_id=#{auctionId} and user_id = #{userId}
+	</select>
+
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="pd">
+		delete from TB_AD
+		where
+		AD_ID =
+		#{AD_ID}
+	</delete>
+
+
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update TB_AD
+		set
+		ADVEID =
+		#{ADVEID},
+		AD_DESCRITE = #{AD_DESCRITE},
+		STARTTIME = #{STARTTIME},
+		ENDTIME = #{ENDTIME},
+		MONEY = #{MONEY},
+		ADPICTURE = #{ADPICTURE},
+		LEFT_ACTION = #{LEFT_ACTION},
+		LEFT_VALUE = #{LEFT_VALUE},
+		STATIC =
+		#{STATIC},
+		CREATETIME = #{CREATETIME},
+		AUDITPERSON = #{AUDITPERSON},
+		AUDITDESCRITE = #{AUDITDESCRITE},
+		AD_ID = AD_ID
+		where
+		AD_ID = #{AD_ID}
+	</update>
+
+
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select
+		ADVEID,
+		AD_DESCRITE,
+		STARTTIME,
+		ENDTIME,
+		MONEY,
+		ADPICTURE,
+		LEFT_ACTION,
+		LEFT_VALUE,
+		STATIC,
+		CREATETIME,
+		AUDITPERSON,
+		AUDITDESCRITE,
+		AD_ID
+		from
+		TB_AD
+		where
+		AD_ID = #{AD_ID}
+	</select>
+
+
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		a.ADVEID,
+		a.AD_DESCRITE,
+		a.STARTTIME,
+		a.ENDTIME,
+		a.MONEY,
+		a.ADPICTURE,
+		a.LEFT_ACTION,
+		a.LEFT_VALUE,
+		a.STATIC,
+		a.CREATETIME,
+		a.AUDITPERSON,
+		a.AUDITDESCRITE,
+		a.AD_ID
+		from
+		TB_AD a
+	</select>
+
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+		a.ADVEID,
+		a.AD_DESCRITE,
+		a.STARTTIME,
+		a.ENDTIME,
+		a.MONEY,
+		a.ADPICTURE,
+		a.LEFT_ACTION,
+		a.LEFT_VALUE,
+		a.STATIC,
+		a.CREATETIME,
+		a.AUDITPERSON,
+		a.AUDITDESCRITE,
+		a.AD_ID
+		from
+		TB_AD a
+	</select>
+
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from TB_AD
+		where
+		AD_ID in
+		<foreach item="item" index="index" collection="array" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+	<!-- 提供手机端数据 广告下载 -->
+	<select id="getAppInfo" parameterType="pd" resultType="pd">
+		select
+		a.ADPICTURE,
+		a.LEFT_ACTION,
+		a.LEFT_VALUE,
+		a.MONEY,
+		a.AD_ID
+		from
+		TB_AD a
+	</select>
+
+</mapper>

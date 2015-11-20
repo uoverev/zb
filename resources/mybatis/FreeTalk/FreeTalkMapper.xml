@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FreeTalkMapper">
+
+
+	<!-- 新增 -->
+	<insert id="save" parameterType="java.util.List">
+		insert into yun_free_talk_time(
+		user_id,
+		startTime,
+		endTime
+		)
+		values
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(
+			#{item.user_id},
+			#{item.startTime},
+			#{item.endTime}
+			)
+		</foreach>
+	</insert>
+
+	<!-- 批量 -->
+	<delete id="delete" parameterType="String">
+		delete from yun_free_talk_time where user_id=#{user_id}
+	</delete>
+
+
+
+</mapper>

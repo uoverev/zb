@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dpraiseMapper">
+	<update id="DZd" parameterType="Map">
+	update yun_dynamic
+	set thumbNumbers=(IFNULL(thumbNumbers,0)+1) 
+	where 
+	dt_id=#{dt_id} 
+	</update>
+	
+	<update id="DZt" parameterType="Map">
+	update yun_task
+	set numbers=(IFNULL(numbers,0)+1)
+	where 
+	task_id=#{task_id} 
+	</update>
+	
+	<update id="DZqd" parameterType="Map">
+	update yun_dynamic
+	set thumbNumbers=if((thumbNumbers-1)>0,(thumbNumbers-1),0) 
+	where 
+	dt_id=#{dt_id} 
+	</update>
+	
+	<update id="DZqt" parameterType="Map">
+	update yun_task
+	set numbers=if((numbers-1)>0,(numbers-1),0)
+	where 
+	task_id=#{task_id} 
+	</update>
+	<!--删除点赞信息-->
+	<delete id="del"  parameterType="Map">
+		delete  from yun_some_praise  where 
+		<if test="task_id!=null and task_id!=0">
+			tid=#{task_id}
+		</if>
+		<if test="dt_id!=null and dt_id!=0">
+			tid=#{dt_id}
+		</if>
+	</delete>
+	<!--添加点赞信息-->
+	<insert id="addtj">
+		insert into   yun_some_praise(tid,user_id,types,createTime) value(
+		<if test="task_id!=null and task_id!=0">
+			#{task_id}
+		</if>
+		<if test="dt_id!=null and dt_id!=0">
+			#{dt_id}
+		</if>
+		,#{userid},#{types},now())
+	</insert>
+	<!--点赞记录表查询-->
+	<select id="dzcx" parameterType="Map" resultType="int"> 
+	select count(*)
+	from  yun_some_praise 
+	WHERE user_id =#{userid}  and types=#{types}
+	<if test="task_id!=null and task_id!=0">
+		and tid=#{task_id}
+	</if>
+	<if test="dt_id!=null and dt_id!=0">
+		and tid=#{dt_id}
+	</if>
+	</select>
+</mapper>

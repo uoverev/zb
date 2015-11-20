@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EvaluationMapper">
+
+
+	<!-- 新增评价 -->
+	<insert id="save" parameterType="pd">
+		insert into yun_evaluation(
+		pj_id ,
+		task_id ,
+		evaluationPeopleId,
+		attitude,
+		literacy,
+		professional,
+		punctual ,
+		content,
+		createTime,
+		byEvaluationId
+		)
+		values (
+		#{pj_id},
+		#{task_id},
+		#{evaluationPeopleId},
+		#{attitude},
+		#{literacy},
+		#{professional},
+		#{punctual},
+		#{content},
+		now(),
+		#{byEvaluationId}
+		)
+		<selectKey resultType="int" order="AFTER" keyProperty="order_id">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+
+
+	<!-- 通过ID获取数据 -->
+	<select id="countByTaskId" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+		select
+		count(*)
+		from yun_evaluation
+		where
+		task_id =#{task_id}
+	</select>
+
+<!-- 修改用户积分信息 -->
+	<update id="editUserIntegral" parameterType="pd">
+		UPDATE yun_user u 
+		set 
+		u.attitude=u.attitude+#{attitude},
+		u.literacy=u.literacy+#{literacy},
+		u.professional=u.professional+#{professional},
+		u.punctual=u.punctual+#{punctual}
+		where u.user_id=#{byEvaluationId}
+	</update>
+
+</mapper>

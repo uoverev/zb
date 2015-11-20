@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AppuserMapper">
+	
+	<!-- ================================================================================================== -->
+	
+	<!-- 更新登录时间 -->
+	<update id="updateLastLogin" parameterType="pd">
+		update SYS_APP_USER set 
+		LAST_LOGIN = #{LAST_LOGIN} 
+		where USER_ID = #{USER_ID}
+	</update>
+	
+	<!-- 判断用户名和密码 -->
+	<select id="getUserInfo" parameterType="pd" resultType="pd">
+		SELECT
+			*
+		FROM
+			tb_usermanger
+		WHERE
+			ACCOUNT=#{userName} 
+			AND userPassword=#{userPassword}
+	</select>
+	
+	<!-- 存入IP -->
+	<update id="saveIP" parameterType="pd">
+		update SYS_APP_USER 
+			set 
+				IP = #{IP}
+			where 
+				USERNAME = #{USERNAME}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="editU" parameterType="pd">
+		update  SYS_APP_USER
+			set USERNAME				= #{USERNAME},
+				NAME					= #{NAME},
+				ROLE_ID 				= #{ROLE_ID},
+				BZ						= #{BZ},
+				PHONE 					= #{PHONE},
+				SFID 					= #{SFID},
+				START_TIME	 			= #{START_TIME},
+				END_TIME 				= #{END_TIME},
+				YEARS					= #{YEARS},
+				STATUS 					= #{STATUS},
+				EMAIL					= #{EMAIL},
+				NUMBER 					= #{NUMBER},
+				EMAP_ID					= #{EMAP_ID}
+			<if test="HEAD != null and HEAD != ''">
+				,HEAD				= #{HEAD}
+			</if>
+			<if test="PASSWORD != null and PASSWORD != ''">
+				,PASSWORD				= #{PASSWORD}
+			</if>
+			where 
+				USER_ID = #{USER_ID}
+	</update>
+	
+	<!-- 通过user_id获取数据 -->
+	<select id="findByUiId" parameterType="pd" resultType="pd">
+		select 
+			USER_ID,
+			USERNAME,
+			PASSWORD,
+			NAME,
+			RIGHTS,
+			ROLE_ID,
+			LAST_LOGIN,
+			IP,
+			STATUS,
+			BZ,
+			PHONE,
+			SFID,
+			START_TIME,
+			END_TIME,
+			YEARS,
+			EMAIL,
+			NUMBER,
+			EMAP_ID,
+			HEAD
+		from 
+			SYS_APP_USER
+		where 
+			USER_ID = #{USER_ID}
+	</select>
+	
+	<!-- 通过邮箱获取数据 -->
+	<select id="findByUE" parameterType="pd" resultType="pd">
+		select 
+			USER_ID,
+			USERNAME,
+			PASSWORD,
+			NAME,
+			RIGHTS,
+			ROLE_ID,
+			LAST_LOGIN,
+			IP,
+			STATUS,
+			BZ,
+			PHONE,
+			SFID,
+			START_TIME,
+			END_TIME,
+			YEARS,
+			EMAIL,
+			NUMBER,
+			HEAD
+		from 
+			SYS_APP_USER
+		where 
+			EMAIL = #{EMAIL}
+		<if test="USERNAME != null and USERNAME != ''">
+			and USERNAME != #{USERNAME} 
+		</if>
+	</select>
+	
+	<!-- 通过编号获取数据 -->
+	<select id="findByUN" parameterType="pd" resultType="pd">
+		select 
+			USER_ID,
+			USERNAME,
+			PASSWORD,
+			NAME,
+			RIGHTS,
+			ROLE_ID,
+			LAST_LOGIN,
+			IP,
+			STATUS,
+			BZ,
+			PHONE,
+			SFID,
+			START_TIME,
+			END_TIME,
+			YEARS,
+			EMAIL,
+			NUMBER,
+			HEAD
+		from 
+			SYS_APP_USER
+		where 
+			NUMBER = #{NUMBER}
+		<if test="USERNAME != null and USERNAME != ''">
+			and USERNAME != #{USERNAME} 
+		</if>
+	</select>
+	
+	<!-- 通过USERNAME获取数据 -->
+	<select id="findByUId" parameterType="pd" resultType="pd">
+		select 
+			USER_ID,
+			USERNAME,
+			PASSWORD,
+			NAME,
+			RIGHTS,
+			ROLE_ID,
+			LAST_LOGIN,
+			IP,
+			STATUS,
+			BZ,
+			PHONE,
+			SFID,
+			START_TIME,
+			END_TIME,
+			YEARS,
+			EMAIL,
+			NUMBER,
+			HEAD
+		from 
+			SYS_APP_USER
+		where 
+			USERNAME = #{USERNAME}
+	</select>
+	
+	<!-- 新增app用户 -->
+	<insert id="saveU" parameterType="pd">
+		insert into SYS_APP_USER (
+			USER_ID,
+			USERNAME,
+			PASSWORD,
+			NAME,
+			RIGHTS,
+			ROLE_ID,
+			LAST_LOGIN,
+			IP,
+			STATUS,
+			BZ,
+			PHONE,
+			SFID,
+			START_TIME,
+			END_TIME,
+			YEARS,
+			EMAIL,
+			NUMBER,
+			EMAP_ID
+			<if test="HEAD != null and HEAD != ''">
+			,HEAD
+			</if>
+		) values (
+			#{USER_ID},
+			#{USERNAME},
+			#{PASSWORD},
+			#{NAME},
+			#{RIGHTS},
+			#{ROLE_ID},
+			#{LAST_LOGIN},
+			#{IP},
+			#{STATUS},
+			#{BZ},
+			#{PHONE},
+			#{SFID},
+			#{START_TIME},
+			#{END_TIME},
+			#{YEARS},
+			#{EMAIL},
+			#{NUMBER},
+			#{EMAP_ID}
+			<if test="HEAD != null and HEAD != ''">
+			,#{HEAD}
+			</if>
+		)
+	</insert>
+	<!-- 用户列表(app用户组) -->
+	<select id="userlistPage" parameterType="page" resultType="pd">
+		SELECT
+			U.USER_ID,
+			U.USERNAME,
+			U. PASSWORD,
+			U.LAST_LOGIN,
+			U. NAME,
+			U.IP,
+			U.END_TIME,
+			U.YEARS,
+			U. STATUS,
+			U.EMAIL,
+			U.PHONE,
+			U.NUMBER,
+			D.ZD_ID,
+			D. NAME AS ZD_NAME,
+			T.EMAP_ID,
+			T.EMAPNAME,
+			U.HEAD
+		FROM
+			SYS_APP_USER U,
+			SYS_DICTIONARIES D,
+			TB_EMAP T
+		WHERE
+			U.ROLE_ID = D.ZD_ID
+		AND U.EMAP_ID = T.EMAP_ID
+		AND 1 = 1
+		AND D.PARENT_ID = '5C836975329D490B939E58AB3D2C26A3'		
+		<if test="pd.USERNAME != null and pd.USERNAME != ''"><!-- 用户名检索 -->
+			and (
+				u.USERNAME LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+				or
+				u.EMAIL LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+				or
+				u.NUMBER LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+				)
+		</if>
+		<if test="pd.ROLE_ID != null and pd.ROLE_ID != ''"><!-- 角色检索 -->
+			and u.ROLE_ID=#{pd.ROLE_ID} 
+		</if>
+		
+		<if test="pd.EMAP_ID != null and pd.EMAP_ID != ''"><!-- 部门检索 -->
+			and u.EMAP_ID=#{pd.EMAP_ID} 
+		</if>
+		<if test="pd.lastLoginStart!=null and pd.lastLoginStart!=''"><!-- 到期时间检索 -->
+			and u.END_TIME &gt;= #{pd.lastLoginStart} 
+		</if>
+		<if test="pd.lastLoginEnd!=null and pd.lastLoginEnd!=''"><!-- 到期时间检索 -->
+			and u.END_TIME &lt;= #{pd.lastLoginEnd} 
+		</if>
+		<if test="pd.STATUS != null and pd.STATUS != ''"><!-- 状态检索 -->
+			and u.STATUS=#{pd.STATUS} 
+		</if>
+	</select>
+	
+	<!-- 用户列表(全部) -->
+	<select id="listAllUser" parameterType="pd" resultType="pd">
+		SELECT
+			U.USER_ID,
+			U.USERNAME,
+			U.NAME,
+			U.EMAIL,
+			U.PHONE,
+			D. NAME AS ZD_NAME,
+			T.EMAP_ID,
+			T.EMAPNAME,
+			U.HEAD
+		FROM
+			SYS_APP_USER U,
+			SYS_DICTIONARIES D,
+			TB_EMAP T
+		WHERE
+			U.ROLE_ID = D.ZD_ID
+		AND U.EMAP_ID = T.EMAP_ID
+		AND 1 = 1
+		AND D.PARENT_ID = '5C836975329D490B939E58AB3D2C26A3'
+	</select>
+	
+	<!-- 删除用户 -->
+	<delete id="deleteU" parameterType="pd">
+		delete from SYS_APP_USER 
+		where 
+			USER_ID = #{USER_ID}
+	</delete>
+	
+	<!-- 批量删除用户 -->
+	<delete id="deleteAllU" parameterType="String">
+		delete from SYS_APP_USER
+		where 
+			USER_ID in
+  			 <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                  #{item}
+             </foreach>
+	</delete>
+	
+	<!-- 修改头像、名称，电话 -->
+	<update id="updateapp" parameterType="pd">
+		 update SYS_APP_USER
+		<set>
+			<if test="HEAD != null and HEAD !='' ">
+				HEAD = #{HEAD},
+			</if>
+			<if test="USERNAME != null and USERNAME !='' ">
+				USERNAME = #{USERNAME},
+			</if>
+			<if test="PHONE != null and PHONE !='' ">
+				PHONE = #{PHONE},
+			</if>
+		</set>
+		where USER_ID = #{USER_ID}
+	</update>
+	<!-- ================================================================================================== -->
+	
+	<!-- app -->
+	<insert id="saveUser" parameterType="pd">
+		insert into TB_USERMANGER(
+			ADVEID,	
+			NICKNAME,	
+			ACCOUNT,	
+			PHONE,	
+			HEAD,	
+			BALANCE,	
+			ALIPAY_NAME,	
+			ALIPAY_ACCOUNT,	
+			STATE,	
+			REGTIME,	
+			INVITER,	
+			USERMANGER_ID,
+			userPassword
+		) values (
+			#{advertisers_ID},	
+			#{NICKNAME},	
+			#{ACCOUNT},	
+			#{PHONE},	
+			#{HEAD},	
+			#{BALANCE},	
+			#{ALIPAY_NAME},	
+			#{ALIPAY_ACCOUNT},	
+			#{STATE},	
+			now(),	
+			#{INVITER},	
+			#{USERMANGER_ID},
+			#{userPassword}
+		)
+	</insert>
+	<!-- 保存用户个人信息 -->
+	<insert id="saveUserInfo" parameterType="pd">
+		INSERT INTO tb_userinfo (
+		  userinfo_ID,
+		  gender,
+		  province,
+		  city,
+		  AREA,
+		  occupation,
+		  age,
+		  Income,
+		  hobby
+		) 
+		VALUES
+		  (
+		    #{advertisers_ID},
+		    #{gender},
+		    #{province},
+		    #{city},
+		    #{AREA},
+		    #{occupation},
+		    #{age},
+		    #{Income},
+		    #{hobby}
+		  ) 
+	</insert>
+	<!-- 保存商家信息 -->
+	<insert id="saveAdvertisers" parameterType="pd">
+		INSERT INTO tb_advertisers (
+		  advertisers_ID,
+		  USER,
+		  IDCard,
+		  NAME,
+		  card_left,
+		  card_right,
+		  state,
+		  money,
+		  audit_user,
+		  audit_descrite
+		) 
+		VALUES
+		  (
+		   #{advertisers_ID},
+		   #{USERMANGER_ID},
+		   #{IDCard},
+		   #{NAME},
+		   #{card_left},
+		   #{card_right},
+		   #{state},
+		   #{money},
+		   #{audit_user},
+		   #{audit_descrite}
+		  )
+	</insert>
+	<!-- 判断用户是否存在 -->
+	<select id="isCreateUser" parameterType="pd" resultType="pd">
+		SELECT * FROM TB_USERMANGER WHERE phone=#{PHONE} 
+	</select>
+</mapper>

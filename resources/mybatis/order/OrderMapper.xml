@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OrderMapper">
+
+
+	<!-- 新增 -->
+	<insert id="save" parameterType="pd" >
+		insert into yun_order(
+		order_id,
+		task_id ,
+		order_type,
+		payDate ,
+		orderDate,
+		moneys,
+		company_earnings,
+		payState,
+		payuserId,
+		payeeId ,
+		coupons
+		) values (
+		#{order_id},
+		#{task_id},
+		#{order_type},
+		#{payDate},
+		now(),
+		#{moneys},
+		#{company_earnings},
+		#{payState},
+		#{payuserId},
+		#{payeeId},
+		#{coupons}
+		)
+	<selectKey resultType="int"  order="AFTER" keyProperty="order_id">  
+          SELECT LAST_INSERT_ID() 
+    </selectKey>  
+	</insert>
+
+	
+	<!-- 修改 -->
+	<update id="editOrderState" parameterType="pd">
+		update yun_order
+		<trim prefix="SET" suffixOverrides=",">
+		<if test="payState!=null and payState!=''">
+		payState=#{payState},
+		</if>
+		<if test="payState==2">
+		payDate=now(),
+		</if>
+		<if test="order_type!=null and order_type!=''">
+		order_type=#{order_type},
+		</if>
+		<if test="moneys!=null and moneys!=''">
+		moneys=#{moneys},
+		</if>
+		<if test="coupons!=null and coupons!=''">
+		coupons=#{coupons},
+		</if>
+		<if test="payeeId!=null and payeeId!=''">
+		payeeId=#{payeeId},
+		</if>
+		<if test="company_earnings!=null and company_earnings!=''">
+		company_earnings=#{company_earnings}
+		</if>
+		</trim>
+		where order_id = #{order_id}
+	</update>
+
+
+
+
+
+	<!-- 通过任务ID获取数据 -->
+	<select id="findOrderByTaskId" parameterType="java.lang.String" resultType="pd">
+		select
+		order_id,
+		task_id ,
+		order_type,
+		payDate ,
+		orderDate,
+		moneys,
+		company_earnings,
+		payState,
+		payuserId,
+		payeeId ,
+		coupons
+		from yun_order
+		where
+		task_id =#{task_id}
+	</select>
+
+
+	
+</mapper>

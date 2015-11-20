@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="HypricesMapper">
+	<select id="Hyprice"  resultType="java.util.Map">
+		
+		select 
+		vId,
+		yj,
+		zk,
+		jg,
+		dateType
+		from yun_member_price
+	</select>
+	<!--会员开通流水-->
+	<insert id="Memberdredge" parameterType="java.util.Map" >
+	  insert  into 	yun_member_open_water(user_id,createTime,yj,zk,jg,dateType) 
+	  VALUES(#{userid},now(),#{yj},#{zk},#{jg},#{dateType})
+	  
+	</insert>
+
+
+	<select id="t1" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(*) from yun_user_vip 
+			where  user_id=#{userid}
+	</select>
+	
+	<select id="t2" parameterType="java.util.Map" resultType="java.lang.Integer">
+		select count(*) from yun_user_vip 
+				where  (select endTime from  yun_user_vip where user_id=#{userid}) &gt;now()
+	</select>
+	<!--修改会员时间-->
+	<update id="updatehytime"  parameterType="Map">
+			update  yun_user_vip set endTime=date_add(now(), INTERVAL #{periodValidity} day) ,
+			vId=#{vId}
+			where user_id=#{userid}
+	</update>
+	
+	<!--修改会员时间-->
+	<update id="updatehytime2"  parameterType="Map">
+			update  yun_user_vip set endTime=date_add(endTime, INTERVAL #{periodValidity} day) ,
+			vId=#{vId}
+			where user_id=#{userid}
+	</update>
+	
+	<!--添加会员记录-->
+	<insert id="addMember" parameterType="Map">
+		insert into  yun_user_vip(user_id,vId,startTime,endTime) values(#{userid},#{vId},now(),date_add(now(), INTERVAL #{periodValidity} day) )
+	</insert>
+	<!-- 修改用户个人余额 -->
+	<update id="updatemoneys" parameterType="Map">
+		update  yun_user set moneys=moneys-#{jg}
+		where  
+		user_id=#{userid} and moneys>#{jg}
+	</update>
+	
+</mapper>

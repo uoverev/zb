@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="visitorIMMapper">
+	<insert id='addvsrecord'>
+		insert into yun_visitors_record(user_id,createTime,fkuserid) VALUES(#{userid},NOW(),#{fkuserid})
+	</insert>
+	<!--访客记录信息-->
+	<select id="vistor" parameterType="Map" resultType="Map">
+	select  
+		u.user_id,
+		u.head_portrait,
+		u.user_name,
+		u.sex,
+ 		r.createTime,
+ 		(select count(fkuserid) from yun_visitors_record where user_id=#{userid}) as fknum
+		from yun_visitors_record r left join  
+		yun_user u on r.fkuserid=u.user_id  
+		where 	
+			r.user_id=#{userid}	
+			ORDER BY r.createTime desc
+			limit #{pageu.pagestart},#{pageu.pagesize}
+				
+	</select>
+	<!--访客总数-->
+	<select id="visitnum"  parameterType="Map" resultType="int">
+		select count(1) from yun_visitors_record where user_id=#{userid}  
+	</select>
+	
+	<select id="visitornum" parameterType="Map" resultType="int"> 
+			select count(*) from  yun_visitors_record where user_id=#{userid} and fkuserid=#{fkuserid}
+	</select>
+	<update id="Updatevistor" parameterType="Map">
+		update  yun_visitors_record  set createTime=now() where user_id=#{userid} and fkuserid=#{fkuserid}
+	</update>
+</mapper>

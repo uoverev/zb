@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EarningsMapper">
+	
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into TB_EARNINGS(
+			USERID,	
+			ITEM,	
+			CREATETIME,	
+			INOROUT,	
+			MONEY,	
+			DESCRIPTION,	
+			EARNINGS_ID
+		) values (
+			#{USERID},	
+			#{ITEM},	
+			now(),	
+			#{INOROUT},	
+			#{MONEY},	
+			#{DESCRIPTION},	
+			#{EARNINGS_ID}
+		)
+	</insert>
+	
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from TB_EARNINGS
+		where 
+			EARNINGS_ID = #{EARNINGS_ID}
+	</delete>
+	
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update  TB_EARNINGS
+			set 
+				USERID = #{USERID},
+				ITEM = #{ITEM},
+				CREATETIME = #{CREATETIME},
+				INOROUT = #{INOROUT},
+				MONEY = #{MONEY},
+				DESCRIPTION = #{DESCRIPTION},
+			EARNINGS_ID = EARNINGS_ID
+			where 
+				EARNINGS_ID = #{EARNINGS_ID}
+	</update>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+			USERID,	
+			ITEM,	
+			CREATETIME,	
+			INOROUT,	
+			MONEY,	
+			DESCRIPTION,	
+			EARNINGS_ID
+		from 
+			TB_EARNINGS
+		where 
+			EARNINGS_ID = #{EARNINGS_ID}
+	</select>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+				a.USERID,	
+				a.ITEM,	
+				a.CREATETIME,	
+				a.INOROUT,	
+				a.MONEY,	
+				a.DESCRIPTION,	
+				a.EARNINGS_ID
+		from 
+				TB_EARNINGS a
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+				a.USERID,	
+				a.ITEM,	
+				a.CREATETIME,	
+				a.INOROUT,	
+				a.MONEY,	
+				a.DESCRIPTION,	
+				a.EARNINGS_ID
+		from 
+				TB_EARNINGS a
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from TB_EARNINGS
+		where 
+			EARNINGS_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	
+	<!-- 根据用户ID获取用户余额  今日收益 -->
+	<select id="byuserIdQuery" parameterType="pd" resultType="pd">
+		SELECT 
+		  (SELECT 
+		    BALANCE 
+		  FROM
+		    tb_usermanger 
+		  WHERE usermanger_id = #{userid}) AS balance,
+		  SUM(money) AS todaymoneys,
+		  (SELECT 
+		    SUM(ITEMVAL) 
+		  FROM
+		    TB_sumincome 
+		  WHERE userid = #{userid}) AS TotalRevenue 
+		FROM
+		  TB_EARNINGS 
+		WHERE userid = #{userid} 
+		  AND TO_DAYS(CREATETIME) = TO_DAYS(NOW()) AND INOROUT='bup_income'
+	</select>
+</mapper>

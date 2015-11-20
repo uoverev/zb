@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UserOperateMapper">
+
+	<sql id="Update_By_Example">
+		<set>
+			<if test="user_name!=null and user_name!=''">
+				yu.user_name = #{user_name},
+			</if>
+			<if test="sex!=null">
+				yu.sex = #{sex},
+			</if>
+			<if test="pushId!=null">
+				yu.pushId = #{pushId},
+			</if>
+			<if test="age!=null and age!=''">
+				yu.age = #{age},
+			</if>
+			<if test="signature!=null">
+				yu.signature = #{signature},
+			</if>
+			<if test="addr!=null and addr!=''">
+				yu.addr = #{addr},
+			</if>
+			<if test="qrcode!=null and qrcode!=''">
+				yu.qrcode = #{qrcode},
+			</if>
+			<if test="province!=null and province!=''">
+				yu.province = #{province},
+			</if>
+			<if test="city!=null and city!=''">
+				yu.city = #{city},
+			</if>
+			<if test="area!=null and area!=''">
+				yu.area = #{area},
+			</if>
+			<if test="payPassword!=null and payPassword!=''">
+				yu.payPassword = #{payPassword},
+			</if>
+			<if test="loginPassword!=null and loginPassword!=''">
+				yu.loginPassword = #{loginPassword},
+			</if>
+			<if test="addrState!=null and addrState!=''">
+				yu.addrState = #{addrState},
+			</if>
+			<if test="emotional!=null and emotional!=''">
+				yu.emotional = #{emotional},
+			</if>
+			<if test="emotionalState!=null and emotionalState!=''">
+				yu.emotionalState = #{emotionalState},
+			</if>
+			<if test="school!=null and school!=''">
+				yu.school = #{school},
+			</if>
+			<if test="schoolState!=null and schoolState!='' ">
+				yu.schoolState = #{schoolState},
+			</if>
+			<if test="lat!=null and lat!='' ">
+				yu.lat = #{lat},
+			</if>
+			<if test="lon!=null and lon!='' ">
+				yu.lnt = #{lon},
+			</if>
+			<if test="hometown!=null and hometown!=''">
+				yu.hometown = #{hometown},
+			</if>
+			<if test="hometownState!=null">
+				yu.hometownState = #{hometownState},
+			</if>
+			<if test="head_portrait!=null">
+				yu.head_portrait = #{head_portrait},
+			</if>
+			<if test="moneys!=null">
+				yu.moneys = #{moneys},
+			</if>
+			<if test="yhj!=null">
+				yu.yhj = #{yhj},
+			</if>
+		</set>
+	</sql>
+	<!-- 插入用户信息 -->
+	<insert id="save" parameterType="Map">
+		insert into yun_user
+		(user_name,loginPassword,mobilephone,phoneCode,topid,province,city,area,createTime,head_portrait)
+		values(#{userName},#{password},#{mobilePhone},#{phoneCode},#{topId},#{province},#{city},#{area},now()
+		,(select CONCAT('http://120.55.125.76:8099/FileServer/uploadFiles/uploadImgs/',FLOOR(RAND()*6),'.png') ))
+		<selectKey resultType="Long" order="AFTER" keyProperty="user_id">
+			select last_insert_id()
+		</selectKey>
+
+	</insert>
+	<!-- 修改用户信息 -->
+	<update id="modify" parameterType="Map">
+		update yun_user yu
+		<include refid="Update_By_Example" />
+		WHERE 1=1
+		<if test="userId!=null">
+			and yu.user_id=#{userId}
+		</if>
+		<if test="mobilePhone!=null">
+			and yu.mobilePhone=#{mobilePhone}
+		</if>
+	</update>
+	<!-- 修改用户信息优惠券 -->
+	<update id="modifyCoupons" parameterType="Map">
+		update yun_user set yhj=yhj+5 where user_id=#{topId}
+	</update>
+	
+	<!-- 删除照片 -->
+	<delete id="removePics" parameterType="Map">
+		delete from yun_photo_album where 1=1
+		<if test="url!=null">
+			and url=#{url}
+		</if>
+		<if test="userId!=null">
+			and user_id=#{userId}
+		</if>
+	</delete>
+	<!-- 新增照片 -->
+	<insert id="saveAlbum" parameterType="Map">
+		insert into yun_photo_album
+		(user_id,url)
+		values(#{userId},#{url})
+	</insert>
+	<!-- 兴趣删除 -->
+	<delete id="removeInterest" parameterType="Map">
+		delete from yun_user_interest where 1=1
+		<if test="xq_id!=null">
+			and xq_id=#{xq_id}
+		</if>
+		<if test="userId!=null">
+			and user_id=#{userId}
+		</if>
+	</delete>
+	<!-- 兴趣添加 -->
+	<insert id="saveInterest" parameterType="Map">
+		insert into
+		yun_user_interest
+		(user_id,xq_id)
+		values(#{userId},#{xq_id})
+	</insert>
+	<!-- 职业技能添加 -->
+	<insert id="saveProfessionalSkill" parameterType="Map">
+		insert into
+		yun_vocational_skills_certification
+		(user_id,task_typeId,job_cl)
+		values(#{userId},#{task_typeId},#{job_cl})
+	</insert>
+	<!-- 身份认证 -->
+	<insert id="saveID" parameterType="Map">
+		insert into
+		yun_general_skills_certification
+		(user_id,namess,idCard,addr,card_up,card_zm,card_fm,state)
+		values(#{userId},#{name},#{cardNo},#{addr},#{fullCard},#{positiveCard},#{negativeCard},#{state})
+	</insert>
+	<!-- 职业认证 -->
+	<insert id="saveProfessionalInfo" parameterType="Map">
+		insert into
+		yun_vocational_skills_certification
+		(user_id,task_typeId,job_cl,state)values
+		<foreach collection="array" item="photo" separator=",">
+			(#{userId},#{taskTypeId},#{photo},#{state})
+		</foreach>
+	</insert>
+
+	<!-- 添加关注 -->
+	<insert id="saveCare" parameterType="Map">
+		insert into yun_fans
+		(user_id,fans_id,createTime)
+		values(#{userId},#{fansId},now())
+		<selectKey resultType="String" order="AFTER" keyProperty="pushid">
+			select pushId from yun_user where user_id=#{userId}
+		</selectKey>
+	</insert>
+	<!-- 取消关注 -->
+	<delete id="cancelCare" parameterType="Map">
+		delete from yun_fans where
+		user_id=#{userId} and fans_id=#{fansId}
+	</delete>
+	<!-- 添加反馈意见 -->
+	<insert id="saveFeedBack" parameterType="Map">
+		insert into yun_feedback
+		(userid,createtime,content)values(#{userId},now(),#{content});
+	</insert>
+
+</mapper>

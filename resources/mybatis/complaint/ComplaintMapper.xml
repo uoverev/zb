@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ComplaintMapper">
+
+
+	<!-- 新增申诉信息 -->
+	<insert id="save" parameterType="pd" >
+		insert into yun_ss(
+		 sId,
+   		task_id,
+   		user_id,
+   		content,
+   		createTime
+		) values (
+		#{sId},
+		#{task_id},
+		#{user_id},
+		#{content},
+		now()
+		)
+	<selectKey resultType="int"  order="AFTER" keyProperty="sId">  
+          SELECT LAST_INSERT_ID() 
+    </selectKey>  
+	</insert>
+	
+	<!-- 新增申诉图片 -->
+	<insert id="savePicture" parameterType="java.util.List" >
+		insert into yun_complaint_picture(
+   		task_id,
+   		url
+		)
+		values
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			(
+			#{item.task_id},
+			#{item.url}
+			)
+		</foreach>
+	</insert>
+	
+</mapper>

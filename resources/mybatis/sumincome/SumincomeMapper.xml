@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SumincomeMapper">
+	
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into TB_SUMINCOME(
+			USERID,	
+			ITEM,	
+			ITEMVAL,	
+			TOTALREVENUE,	
+			SUMINCOME_ID
+		) values (
+			#{USERID},	
+			#{ITEM},	
+			#{MONEY},	
+			#{MONEY},	
+			#{SUMINCOME_ID}
+		)
+	</insert>
+	
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from TB_SUMINCOME
+		where 
+			SUMINCOME_ID = #{SUMINCOME_ID}
+	</delete>
+	
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update  TB_SUMINCOME
+			set 
+				USERID = #{USERID},
+				ITEM = #{ITEM},
+				ITEMVAL = #{ITEMVAL},
+				TOTALREVENUE = #{TOTALREVENUE},
+			SUMINCOME_ID = SUMINCOME_ID
+			where 
+				SUMINCOME_ID = #{SUMINCOME_ID}
+	</update>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+			USERID,	
+			ITEM,	
+			ITEMVAL,	
+			TOTALREVENUE,	
+			SUMINCOME_ID
+		from 
+			TB_SUMINCOME
+		where 
+			SUMINCOME_ID = #{SUMINCOME_ID}
+	</select>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+				a.USERID,	
+				a.ITEM,	
+				a.ITEMVAL,	
+				a.TOTALREVENUE,	
+				a.SUMINCOME_ID
+		from 
+				TB_SUMINCOME a
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+				a.USERID,	
+				a.ITEM,	
+				a.ITEMVAL,	
+				a.TOTALREVENUE,	
+				a.SUMINCOME_ID
+		from 
+				TB_SUMINCOME a
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from TB_SUMINCOME
+		where 
+			SUMINCOME_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	<!-- 根据用户Id获取今日收益，昨日收益，广告收益，邀请收益，分享收益，下载收益，电话咨询，网页查看 -->
+	<select id="incomeStatistics" parameterType="pd" resultType="pd">
+	SELECT 
+	(SELECT SUM(money) FROM tb_earnings WHERE TO_DAYS(CREATETIME) = TO_DAYS(NOW())) AS todaymoneys,
+	(SELECT SUM(money) FROM tb_earnings WHERE TO_DAYS(CREATETIME) = TO_DAYS(NOW())-1) AS yesterday,
+	(SELECT SUM(ITEMVAL) FROM TB_SUMINCOME WHERE item='earnings_ad' AND userid=#{userid}) AS ad,
+	(SELECT SUM(ITEMVAL) FROM TB_SUMINCOME WHERE item='earnings_invitation' AND userid=#{userid}) AS invitation,
+	(SELECT SUM(ITEMVAL) FROM TB_SUMINCOME WHERE item='earnings_shares' AND userid=#{userid}) AS shares,
+	(SELECT SUM(ITEMVAL) FROM TB_SUMINCOME WHERE item='earnings_down' AND userid=#{userid}) AS down,
+	(SELECT SUM(ITEMVAL) FROM TB_SUMINCOME WHERE item='earnings_phone' AND userid=#{userid}) AS phone,
+	(SELECT SUM(ITEMVAL) FROM TB_SUMINCOME WHERE item='earnings_webpage' AND userid=#{userid}) AS webpage
+	FROM TB_SUMINCOME LIMIT 1,1
+	</select>
+	<!-- 查询七天收益 -->
+	<select id="sevenDays" parameterType="pd" resultType="pd">
+		SELECT 
+		  DATE_FORMAT(CREATETIME,'%c-%d') as times, 
+		  COUNT(*) as numbers
+		FROM
+		  tb_earnings 
+		WHERE DATE_SUB(CURDATE(), INTERVAL 7 DAY) &lt;= DATE(CREATETIME) 
+		  AND USERID = #{userid} 
+		GROUP BY createtime
+	</select>
+</mapper>
